@@ -1,0 +1,18 @@
+# Foundry
+out/
+cache/
+
+# Foundry dependencies
+**/lib/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
