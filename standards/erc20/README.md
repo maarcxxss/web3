@@ -1,66 +1,77 @@
-## Foundry
+# ERC-20 Token Implementation
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A custom ERC-20 token implemented in Solidity using Foundry. This project is part of my personal work on Ethereum smart contracts, with a focus on understanding token standards, access control and on-chain permissions.
 
-Foundry consists of:
+## Overview
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+`MyToken` implements the core ERC-20 interface and extends it with additional functionality for supply management, role-based permissions, pausing and signature-based approvals.
 
-## Documentation
+The project is intended as a practical exercise in smart contract development. The implementation is built around the standard ERC-20 interface while keeping the additional features explicit and easy to inspect.
 
-https://book.getfoundry.sh/
+## Features
 
-## Usage
+* **ERC-20 functionality:** token metadata, balances, transfers, allowances and approvals.
+* **Supply cap:** a maximum token supply of 2,000 MTK.
+* **Minting and burning:** controlled token creation and token destruction.
+* **Access control:** owner and minter roles with separate permissions.
+* **Pause mechanism:** the owner can pause and resume the token operations covered by the pause checks.
+* **Permit:** signature-based approvals using EIP-712 and the EIP-2612 approach.
+* **Custom errors and events:** explicit error handling and events for relevant state changes.
 
-### Build
+## Technical details
 
-```shell
-$ forge build
+* Token name: `My Token`
+* Symbol: `MTK`
+* Decimals: `18`
+* Maximum supply: `2,000 MTK`
+* Language: Solidity
+* Development framework: Foundry
+
+The constructor accepts the initial supply as a whole-token amount. Other token operations use the smallest token units, following the usual ERC-20 convention.
+
+The owner and minter roles are independent after deployment. The owner manages permissions and the pause mechanism, while authorised minters can create tokens within the supply cap.
+
+## Tech stack
+
+* Solidity
+* Foundry (`forge`)
+* Git and GitHub
+
+## Project structure
+
+```text
+erc20/
+├── src/
+│   ├── IERC20.sol
+│   └── MyToken.sol
+├── test/
+├── foundry.toml
+└── README.md
 ```
 
-### Test
+## Getting started
 
-```shell
-$ forge test
+Make sure Foundry is installed and available in your terminal.
+
+From this directory, compile the contracts with:
+
+```bash
+forge build
 ```
 
-### Format
+To run the test suite once it has been added, use:
 
-```shell
-$ forge fmt
+```bash
+forge test
 ```
 
-### Gas Snapshots
+## Project status
 
-```shell
-$ forge snapshot
-```
+The initial token implementation is in place and compiles successfully. The test suite and final project documentation are still in progress.
 
-### Anvil
+## Next steps
 
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+* Add tests for the ERC-20 functions and token supply limits.
+* Test access control, pause behaviour and edge cases.
+* Verify the permit flow, including invalid signatures, expired deadlines and nonce handling.
+* Document the test results and deployment workflow.
