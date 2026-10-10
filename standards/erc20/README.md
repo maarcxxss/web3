@@ -1,43 +1,36 @@
-# ERC-20 Token Implementation
+# ERC-20 Token — Solidity & Foundry
 
-A custom ERC-20 token implemented in Solidity using Foundry. This project is part of my personal work on Ethereum smart contracts, with a focus on understanding token standards, access control and on-chain permissions.
+Implementación personalizada de un token fungible compatible con el estándar **ERC-20 de Ethereum**, desarrollada en Solidity como parte de un proyecto personal de aprendizaje de Blockchain y Web3.
 
-## Overview
+El objetivo es comprender cómo funcionan los Smart Contracts, implementar los mecanismos principales de un token y verificar su comportamiento mediante pruebas automatizadas con Foundry.
 
-`MyToken` implements the core ERC-20 interface and extends it with additional functionality for supply management, role-based permissions, pausing and signature-based approvals.
+> **Estado:** desarrollo en curso. Las pruebas unitarias y el análisis de cobertura están completados para la versión actual. El fuzz testing y las pruebas de invariantes están pendientes.
 
-The project is intended as a practical exercise in smart contract development. The implementation is built around the standard ERC-20 interface while keeping the additional features explicit and easy to inspect.
+## Características
 
-## Features
+- **ERC-20:** implementación de las funciones principales del estándar.
+- **Gestión de balances y supply:** consulta de balances y suministro total.
+- **Transferencias:** `transfer`, `approve` y `transferFrom`.
+- **Eventos:** `Transfer`, `Approval` y eventos relacionados con la pausa.
+- **Control de acceso:** propietario del contrato y permisos de minter.
+- **Mint y burn:** creación y destrucción de tokens.
+- **Supply máximo:** límite de emisión mediante `CAP`.
+- **Pausado:** funciones `pause` y `unpause` para controlar determinadas operaciones.
+- **Permit:** implementación personalizada de firmas basada en EIP-2612 y EIP-712.
+- **Custom errors:** errores específicos para representar condiciones de fallo.
+- **Testing:** pruebas automatizadas con Forge y análisis de cobertura.
 
-* **ERC-20 functionality:** token metadata, balances, transfers, allowances and approvals.
-* **Supply cap:** a maximum token supply of 2,000 MTK.
-* **Minting and burning:** controlled token creation and token destruction.
-* **Access control:** owner and minter roles with separate permissions.
-* **Pause mechanism:** the owner can pause and resume the token operations covered by the pause checks.
-* **Permit:** signature-based approvals using EIP-712 and the EIP-2612 approach.
-* **Custom errors and events:** explicit error handling and events for relevant state changes.
+## Tecnologías
 
-## Technical details
+- Solidity
+- Foundry
+- Forge
+- Anvil
+- Cast
+- Git y GitHub
+- Visual Studio Code
 
-* Token name: `My Token`
-* Symbol: `MTK`
-* Decimals: `18`
-* Maximum supply: `2,000 MTK`
-* Language: Solidity
-* Development framework: Foundry
-
-The constructor accepts the initial supply as a whole-token amount. Other token operations use the smallest token units, following the usual ERC-20 convention.
-
-The owner and minter roles are independent after deployment. The owner manages permissions and the pause mechanism, while authorised minters can create tokens within the supply cap.
-
-## Tech stack
-
-* Solidity
-* Foundry (`forge`)
-* Git and GitHub
-
-## Project structure
+## Estructura del proyecto
 
 ```text
 erc20/
@@ -45,33 +38,87 @@ erc20/
 │   ├── IERC20.sol
 │   └── MyToken.sol
 ├── test/
+│   ├── MyToken.t.sol
+│   ├── MyToken_fuzz.t.sol
+│   └── MyToken_invariant.t.sol
 ├── foundry.toml
+├── .gitignore
 └── README.md
 ```
 
-## Getting started
+Los archivos de fuzzing e invariantes forman parte de la siguiente etapa de desarrollo; su inclusión en la estructura no implica que las pruebas estén completadas.
 
-Make sure Foundry is installed and available in your terminal.
+## Instalación y ejecución
 
-From this directory, compile the contracts with:
+Se necesita tener Git y Foundry instalados.
+
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/maarcxxss/web3.git
+```
+
+Entrar en el directorio del proyecto ERC-20:
+
+```bash
+cd web3/standards/erc20
+```
+
+Compilar los contratos:
 
 ```bash
 forge build
 ```
 
-To run the test suite once it has been added, use:
+Ejecutar las pruebas:
 
 ```bash
 forge test
 ```
 
-## Project status
+Generar un informe de cobertura:
 
-The initial token implementation is in place and compiles successfully. The test suite and final project documentation are still in progress.
+```bash
+forge coverage --report summary
+```
 
-## Next steps
+## Testing y cobertura
 
-* Add tests for the ERC-20 functions and token supply limits.
-* Test access control, pause behaviour and edge cases.
-* Verify the permit flow, including invalid signatures, expired deadlines and nonce handling.
-* Document the test results and deployment workflow.
+La suite de pruebas unitarias cubre el comportamiento de las funciones del token, los permisos, los eventos, las condiciones de error, el pausado y el mecanismo `permit`.
+
+Resultados obtenidos en la versión actual:
+
+| Métrica | Cobertura |
+|---|---:|
+| Líneas | 100 % |
+| Instrucciones | 100 % |
+| Ramas | 100 % |
+| Funciones | 100 % |
+
+La cobertura se ha calculado con `forge coverage --report summary`. Estos resultados describen la cobertura de código alcanzada por los tests; no constituyen por sí solos una auditoría de seguridad.
+
+## Roadmap
+
+- [x] Implementación del contrato ERC-20 personalizado.
+- [x] Gestión de balances, allowances y transferencias.
+- [x] Control de acceso y permisos de minter.
+- [x] Funciones de mint y burn.
+- [x] Límite máximo de suministro.
+- [x] Mecanismo de pausado.
+- [x] Implementación de `permit`.
+- [x] Pruebas unitarias.
+- [x] Cobertura del 100 % en líneas, instrucciones, ramas y funciones.
+- [ ] Implementar y validar pruebas de fuzzing.
+- [ ] Implementar y validar pruebas de invariantes.
+- [ ] Revisar seguridad y casos límite.
+- [ ] Documentar el proceso de despliegue en una blockchain local con Anvil.
+
+## Objetivo de aprendizaje
+
+El proyecto busca comprender el funcionamiento interno de los estándares de Ethereum y desarrollar buenas prácticas de programación, testing y seguridad de Smart Contracts.
+
+Es un proyecto educativo en desarrollo y no está destinado actualmente a gestionar fondos reales.
+
+## Autor
+
+Proyecto personal de aprendizaje de Ingeniería Informática, centrado en Blockchain, Solidity, Smart Contracts y desarrollo Web3.
