@@ -21,7 +21,9 @@ event Paused(address indexed account);
 event Unpaused(address indexed account);
 
 contract MyToken is IERC20 {
-    /* 1. Metadatos del token */
+    // =============================================================
+    // METADATOS DEL TOKEN
+    // =============================================================
     string private constant _NAME = "MyToken";
     string private constant _SYMBOL = "MTK";
     uint8 private constant _DECIMALS = 18;
@@ -40,7 +42,9 @@ contract MyToken is IERC20 {
     // Identifica la versión del dominio como "1"
     bytes32 private constant _VERSION_HASH = keccak256("1");
 
-    /* 2. Variables de estado */
+    // =============================================================
+    // VARIABLES DE ESTADO
+    // =============================================================
     // Suministro y balances
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
@@ -58,7 +62,9 @@ contract MyToken is IERC20 {
     // Contador de Nonces para evitar reutilización de firmas
     mapping(address => uint256) public nonces;
 
-    /* 3. Constructor */
+    // =============================================================
+    // CONSTRUCTOR
+    // =============================================================
     constructor(uint256 initialSupply) {
         uint256 maxWholeTokens = CAP / _UNIT;
 
@@ -79,7 +85,9 @@ contract MyToken is IERC20 {
         emit Transfer(address(0), msg.sender, supply);
     }
 
-    /* 4. Modifiers */
+    // =============================================================
+    // MODIFIERS
+    // =============================================================
     modifier onlyOwner() {
         if (msg.sender != _owner) {
             revert Unauthorized(msg.sender);
@@ -101,7 +109,9 @@ contract MyToken is IERC20 {
         _;
     }
 
-    /* 5. Funciones Metadatos */
+    // =============================================================
+    // FUNCIONES METADATOS
+    // =============================================================
     function name() external pure returns (string memory) {
         return _NAME;
     }
@@ -114,7 +124,9 @@ contract MyToken is IERC20 {
         return _DECIMALS;
     }
 
-    /* 6. Funciones ERC-20 */
+    // =============================================================
+    // FUNCIONES ERC-20
+    // =============================================================
     // Consulta del suministro total
     function totalSupply() external view override returns (uint256) {
         return _totalSupply;
@@ -186,7 +198,9 @@ contract MyToken is IERC20 {
         return true;
     }
 
-    /* 7. Creación y destrucción de tokens */
+    // =============================================================
+    // BURN Y MINT
+    // =============================================================
     function mint(address to, uint256 amount) external onlyMinter whenNotPaused {
         if (to == address(0)) {
             revert InvalidAddress();
@@ -215,7 +229,9 @@ contract MyToken is IERC20 {
         emit Transfer(msg.sender, address(0), amount);
     }
 
-    /* 8. Gestión de permisos */
+    // =============================================================
+    // GESTION DE PERMISOS
+    // =============================================================
     function owner() external view returns (address) {
         return _owner;
     }
@@ -253,7 +269,9 @@ contract MyToken is IERC20 {
         emit MinterUpdated(account, false);
     }
 
-    /* 9. Gestion de pausado */
+    // =============================================================
+    // GESTION DE PAUSADO
+    // =============================================================
     function paused() external view returns (bool) {
         return _paused;
     }
@@ -276,7 +294,9 @@ contract MyToken is IERC20 {
         emit Unpaused(msg.sender);
     }
 
-    /* 10. Permit (EIP-2612) */
+    // =============================================================
+    // PERMIT (EIP-2612)
+    // =============================================================
     /// @notice Devuelve el separador de dominio EIP-712.
     /// @dev Vincula las firmas al nombre, versión, red y dirección del contrato.
     function DOMAIN_SEPARATOR() public view returns (bytes32) {
