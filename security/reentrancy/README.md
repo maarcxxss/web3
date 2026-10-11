@@ -1,71 +1,112 @@
 # Reentrancy
 
-La **reentrancy** es una vulnerabilidad de seguridad en Smart Contracts que aparece cuando una llamada externa permite volver a ejecutar una función del contrato antes de que la ejecución anterior haya terminado de actualizar correctamente su estado.
+**Reentrancy** is a smart contract security vulnerability that occurs when an external call allows control flow to re-enter a contract before a previous operation has completed its execution and updated its state consistently.
 
-Este comportamiento puede provocar inconsistencias en el estado del contrato y permitir que un atacante aproveche operaciones que no deberían poder ejecutarse repetidamente en esas condiciones.
+This behavior can lead to unexpected state changes, broken invariants, and, in certain scenarios, the unauthorized withdrawal or manipulation of assets.
 
-La reentrancy puede aparecer en distintos contextos, como retiradas de fondos, depósitos, préstamos, intercambios de tokens u otras operaciones que interactúan con contratos externos.
+Reentrancy is not limited to a specific type of protocol. It can affect different smart contract architectures, including staking systems, lending protocols, token vaults, exchanges, and other systems that interact with external contracts.
+
+This section explores reentrancy vulnerabilities through practical Solidity and Foundry experiments, focusing on how attacks work, how to reproduce them, and how to evaluate potential mitigations.
 
 ---
 
 ## Objectives
 
-The purpose of this section is to study reentrancy vulnerabilities through practical Solidity and Foundry experiments.
+The purpose of this section is to develop a practical understanding of reentrancy vulnerabilities and their impact on smart contract security.
 
-The laboratories will explore:
+The main objectives are to:
 
-- How reentrancy works at the EVM execution level
-- How external calls can enable unexpected control flow
-- How vulnerable state-update patterns can be exploited
-- How reentrancy can affect different contract architectures
-- How to reproduce vulnerabilities using automated tests
-- How to apply and evaluate defensive patterns
-- What limitations remain after applying a mitigation
+- Understand how reentrancy works during EVM execution.
+- Identify vulnerable patterns involving external calls.
+- Analyze how state inconsistencies can be exploited.
+- Reproduce vulnerabilities using Solidity and Foundry.
+- Compare vulnerable and secure implementations.
+- Apply defensive patterns and evaluate their limitations.
+- Develop automated tests that verify security properties.
 
 ---
 
 ## Reentrancy variants
 
-Reentrancy is not limited to a single function or contract design. Different scenarios may involve:
+Reentrancy can occur in different forms depending on the contract architecture, the functions involved, and the state shared between contracts.
+
+The main scenarios explored in this section may include:
 
 - **Single-function reentrancy:** re-entering the same function before its previous execution has completed.
-- **Cross-function reentrancy:** exploiting interactions between multiple functions that share or depend on the same state.
+- **Cross-function reentrancy:** exploiting interactions between multiple functions that depend on shared state.
 - **Cross-contract reentrancy:** exploiting interactions between different contracts whose operations affect one another.
-- **Read-only reentrancy:** using intermediate or inconsistent state observed during execution to affect other protocol operations.
+- **Read-only reentrancy:** exploiting intermediate or inconsistent state observed during execution to influence other protocol operations.
 
-These categories can overlap, and the relevant attack surface depends on the contract architecture and its external interactions.
+These categories are not mutually exclusive. A single vulnerability may involve several of these mechanisms.
+
+---
+
+## Common causes
+
+Reentrancy vulnerabilities often arise when a contract makes an external call before completing the state updates required to preserve its invariants.
+
+A simplified vulnerable pattern is:
+
+```solidity
+function withdraw() external {
+    uint256 amount = balances[msg.sender];
+
+    // External interaction occurs first.
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success, "Transfer failed");
+
+    // State is updated too late.
+    balances[msg.sender] = 0;
+}
+```
+
+If the recipient is a contract capable of calling back into `withdraw()`, the function may execute again while the original recorded balance is still available.
+
+The exact impact depends on the contract's logic, the external interaction, and the invariants that should be preserved.
 
 ---
 
 ## Defensive techniques
 
-The experiments will examine defensive techniques such as:
+The experiments in this section will examine several techniques for reducing reentrancy risk.
 
-- Checks-Effects-Interactions (CEI)
-- Reentrancy guards
-- Careful management of external calls
-- State-invariant analysis
-- Adversarial testing with malicious contracts
+### Checks-Effects-Interactions (CEI)
 
-No single technique should be treated as a substitute for reviewing the complete contract and its interactions.
+Perform validation first, update the contract's state second, and make external calls afterward.
+
+### Reentrancy guards
+
+Use mechanisms such as a reentrancy lock to prevent protected functions from being entered recursively.
+
+### Careful external-call handling
+
+Review calls to external contracts, including token transfers, callbacks, and interactions with other protocols.
+
+### Invariant-based testing
+
+Define the conditions that must always hold and verify them through automated tests, including adversarial scenarios.
+
+No individual technique guarantees security in every situation. The appropriate mitigation depends on the complete contract architecture and its interactions.
 
 ---
 
 ## Practical laboratories
 
+Each laboratory focuses on a particular reentrancy scenario and contains its own implementation, tests, and technical analysis.
+
 | Laboratory | Description |
 |---|---|
 | [Staking Reentrancy](staking/) | Exploiting a vulnerable withdrawal operation and comparing it with a CEI-based implementation. |
 
-Additional laboratories will be added as new reentrancy scenarios are studied.
+Additional laboratories will be added as new scenarios are studied.
 
 ---
 
 ## Testing environment
 
-The laboratories use Solidity and Foundry to deploy contracts, reproduce attacks and verify their effects through automated tests.
+The laboratories use **Solidity** and **Foundry** to deploy contracts, reproduce attacks, and verify their effects through automated tests.
 
-From an individual laboratory directory, tests can be executed with:
+Run the tests from the relevant laboratory directory:
 
 ```bash
 forge test -vv
@@ -77,10 +118,14 @@ For a more detailed execution trace:
 forge test -vvvv
 ```
 
-Each laboratory includes its own implementation, tests and technical analysis.
+Each laboratory provides its own instructions and expected results.
 
 ---
 
-## Scope
+## Scope and limitations
 
-These laboratories are educational experiments designed to understand specific vulnerability patterns and their mitigations. Passing the tests does not constitute a complete security audit or guarantee that a contract is secure.
+These laboratories are educational experiments designed to study specific vulnerability patterns and defensive techniques.
+
+Passing the tests demonstrates that the tested scenarios behave as expected. It does not constitute a complete security audit or guarantee that a contract is secure against all possible attacks.
+
+The objective is to understand not only how a vulnerability can be exploited, but also why it exists, how a mitigation works, and what risks may remain.
