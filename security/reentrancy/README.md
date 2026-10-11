@@ -128,4 +128,7 @@ These laboratories are educational experiments designed to study specific vulner
 
 Passing the tests demonstrates that the tested scenarios behave as expected. It does not constitute a complete security audit or guarantee that a contract is secure against all possible attacks.
 
+
+The objective is to understand not only how a vulnerability can be exploited, but also why it exists, how a mitigation works, and what risks may remain.
+
 The objective is to understand not only how a vulnerability can be exploited, but also why it exists, how a mitigation works, and what risks may remain.
