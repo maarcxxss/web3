@@ -83,7 +83,7 @@ The victim's recorded balance remains 100, but the staking contract has no token
 
 `test_ReentrancyAttackBlocked()` prepares the same initial conditions for `SecureStaking`.
 
-When the attacker attempts to re-enter `withdrawAll()`, the recorded balance is already zero. The second withdrawal reverts with `Nothing to withdraw`.
+When the attacker attempts to re-enter `withdrawAll()`, the recorded balance is already zero. The second withdrawall reverts with `Nothing to withdraw`.
 
 Because the error propagates through the external call, the complete transaction reverts, including the initial transfer. Both deposits remain in the staking contract, and both recorded balances remain unchanged.
 
