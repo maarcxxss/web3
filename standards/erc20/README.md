@@ -1,34 +1,34 @@
 # ERC-20 Token — Solidity & Foundry
 
-Implementación personalizada de un token fungible compatible con el estándar **ERC-20 de Ethereum**, desarrollada en Solidity como parte de un proyecto personal de aprendizaje de Blockchain y Web3.
+A custom implementation of a fungible token compatible with the **ERC-20 Ethereum standard**, developed in Solidity as part of a personal Blockchain and Web3 learning project.
 
-El proyecto explora el funcionamiento de los Smart Contracts, la implementación de los mecanismos principales de un token y la validación de su comportamiento mediante pruebas automatizadas con Foundry.
+This project explores smart contract fundamentals, the implementation of the main mechanisms of a token, and the verification of its behavior through automated testing with Foundry.
 
-**Estado:** implementación y testing completados para la versión actual. La revisión de seguridad y la documentación técnica continúan en desarrollo.
+**Status:** Implementation and testing completed for the current version. Security review and technical documentation are still in progress.
 
-## Características
+## Features
 
-- **ERC-20:** implementación personalizada de las funciones principales del estándar.
-- **Balances y suministro:** consulta de balances y suministro total.
-- **Transferencias:** `transfer`, `approve` y `transferFrom`.
-- **Eventos:** `Transfer`, `Approval` y eventos relacionados con la gestión del contrato.
-- **Control de acceso:** propiedad del contrato y permisos de minter.
-- **Mint y burn:** creación y destrucción de tokens.
-- **Supply máximo:** límite de emisión mediante `CAP`.
-- **Pausado:** funciones `pause` y `unpause`.
-- **Permit:** implementación personalizada basada en EIP-2612 y EIP-712 para establecer allowances mediante firmas.
-- **Custom errors:** errores específicos para representar condiciones de fallo.
-- **Testing:** pruebas unitarias, fuzz testing y pruebas de invariantes.
-- **Code coverage:** análisis de cobertura mediante Foundry.
+- **ERC-20:** Custom implementation of the standard's core functions.
+- **Balances and supply:** Balance and total supply queries.
+- **Transfers:** `transfer`, `approve`, and `transferFrom`.
+- **Events:** `Transfer`, `Approval`, and events related to contract management.
+- **Access control:** Contract ownership and minter permissions.
+- **Mint and burn:** Token creation and destruction.
+- **Supply cap:** Maximum issuance limit enforced through `CAP`.
+- **Pausability:** `pause` and `unpause` functions.
+- **Permit:** Custom implementation based on EIP-2612 and EIP-712 for setting allowances through signatures.
+- **Custom errors:** Specific errors representing failure conditions.
+- **Testing:** Unit tests, fuzz testing, and invariant testing.
+- **Code coverage:** Coverage analysis using Foundry.
 
-## Tecnologías
+## Technologies
 
 - Solidity
-- Foundry: Forge, Anvil y Cast
-- Git y GitHub
+- Foundry: Forge, Anvil, and Cast
+- Git and GitHub
 - Visual Studio Code
 
-## Estructura del proyecto
+## Project Structure
 
 ```text
 erc20/
@@ -46,223 +46,223 @@ erc20/
 └── README.md
 ```
 
-### Contratos
+### Contracts
 
-- `IERC20.sol`: define la interfaz ERC-20 utilizada por el proyecto.
-- `MyToken.sol`: contiene la implementación personalizada del token.
+- `IERC20.sol`: Defines the ERC-20 interface used by the project.
+- `MyToken.sol`: Contains the custom token implementation.
 
 ### Tests
 
-- `MyToken.t.sol`: pruebas unitarias de funciones, permisos, eventos, errores y mecanismos del contrato.
-- `MyToken_fuzz.t.sol`: pruebas con entradas generadas automáticamente.
-- `MyToken_invariant.t.sol`: pruebas de invariantes para verificar propiedades durante secuencias de transferencias.
+- `MyToken.t.sol`: Unit tests covering functions, permissions, events, errors, and contract mechanisms.
+- `MyToken_fuzz.t.sol`: Tests using automatically generated inputs.
+- `MyToken_invariant.t.sol`: Invariant tests that verify properties across sequences of token transfers.
 
 ### Scripts
 
-- `DeployMyToken.s.sol`: permite desplegar el token mediante Foundry.
+- `DeployMyToken.s.sol`: Deploys the token using Foundry.
 
-## Instalación y ejecución
+## Installation and Execution
 
-Requisitos previos: Git y Foundry instalados.
+**Prerequisites:** Git and Foundry installed.
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/maarcxxss/web3.git
 cd web3/standards/erc20
 ```
 
-### 2. Instalar la dependencia de testing
+### 2. Install the testing dependency
 
-El proyecto utiliza `forge-std` para las pruebas y los scripts de Foundry.
+The project uses `forge-std` for Foundry tests and deployment scripts.
 
 ```bash
 forge install foundry-rs/forge-std --no-commit
 ```
 
-### 3. Compilar los contratos
+### 3. Compile the contracts
 
 ```bash
 forge build
 ```
 
-### 4. Ejecutar todas las pruebas
+### 4. Run all tests
 
 ```bash
 forge test
 ```
 
-### 5. Ejecutar las pruebas unitarias
+### 5. Run unit tests
 
 ```bash
 forge test --match-path test/MyToken.t.sol
 ```
 
-### 6. Ejecutar el fuzz testing
+### 6. Run fuzz tests
 
 ```bash
 forge test --match-path test/MyToken_fuzz.t.sol
 ```
 
-### 7. Ejecutar las pruebas de invariantes
+### 7. Run invariant tests
 
 ```bash
 forge test --match-path test/MyToken_invariant.t.sol
 ```
 
-### 8. Generar un informe de cobertura
+### 8. Generate a coverage report
 
 ```bash
 forge coverage --report summary
 ```
 
-## Despliegue local con Anvil
+## Local Deployment with Anvil
 
-Anvil permite ejecutar una blockchain Ethereum local para desplegar contratos y probar transacciones sin utilizar fondos reales.
+Anvil runs a local Ethereum blockchain that allows contracts to be deployed and transactions to be tested without using real funds.
 
-### 1. Iniciar Anvil
+### 1. Start Anvil
 
-En una terminal independiente:
+In a separate terminal, run:
 
 ```bash
 anvil
 ```
 
-Mantén esta terminal abierta mientras trabajas con la blockchain local.
+Keep this terminal open while interacting with the local blockchain.
 
-### 2. Desplegar el token
+### 2. Deploy the token
 
-Desde la carpeta `standards/erc20`, ejecuta:
+From the `standards/erc20` directory, run:
 
 ```bash
 forge script script/DeployMyToken.s.sol:DeployMyToken --rpc-url http://127.0.0.1:8545 --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --unlocked --broadcast
 ```
 
-El comando utiliza una cuenta predeterminada de Anvil. Comprueba que la dirección indicada aparece entre las cuentas de tu instancia local.
+This command uses a default Anvil account. Verify that the specified address appears among the accounts provided by your local Anvil instance.
 
-Al finalizar, Foundry mostrará la dirección del contrato desplegado. Utiliza esa dirección en las consultas siguientes.
+Once deployment completes, Foundry will display the deployed contract address. Use that address in the following queries.
 
-### 3. Consultar el token
+### 3. Query the token
 
-Sustituye `DIRECCION_CONTRATO` por la dirección que haya devuelto el despliegue.
+Replace `CONTRACT_ADDRESS` with the address returned by the deployment command.
 
-Consultar el nombre:
-
-```bash
-cast call DIRECCION_CONTRATO "name()(string)" --rpc-url http://127.0.0.1:8545
-```
-
-Consultar el suministro total:
+Query the token name:
 
 ```bash
-cast call DIRECCION_CONTRATO "totalSupply()(uint256)" --rpc-url http://127.0.0.1:8545
+cast call CONTRACT_ADDRESS "name()(string)" --rpc-url http://127.0.0.1:8545
 ```
 
-Consultar los decimales:
+Query the total supply:
 
 ```bash
-cast call DIRECCION_CONTRATO "decimals()(uint8)" --rpc-url http://127.0.0.1:8545
+cast call CONTRACT_ADDRESS "totalSupply()(uint256)" --rpc-url http://127.0.0.1:8545
 ```
 
-Consultar el balance de una cuenta:
+Query the number of decimals:
 
 ```bash
-cast call DIRECCION_CONTRATO "balanceOf(address)(uint256)" DIRECCION_CUENTA --rpc-url http://127.0.0.1:8545
+cast call CONTRACT_ADDRESS "decimals()(uint8)" --rpc-url http://127.0.0.1:8545
 ```
 
-### 4. Enviar una transferencia
-
-Ejemplo de transferencia de 10 tokens entre dos cuentas de Anvil:
+Query an account's balance:
 
 ```bash
-cast send DIRECCION_CONTRATO "transfer(address,uint256)" DIRECCION_DESTINO 10000000000000000000 --rpc-url http://127.0.0.1:8545 --unlocked --from DIRECCION_EMISOR
+cast call CONTRACT_ADDRESS "balanceOf(address)(uint256)" ACCOUNT_ADDRESS --rpc-url http://127.0.0.1:8545
 ```
 
-Con 18 decimales, `10000000000000000000` representa 10 tokens.
+### 4. Send a token transfer
 
-El comando devuelve información sobre la transacción, incluyendo su hash, el bloque, el gas utilizado y los logs generados.
+Example: transfer 10 tokens between two Anvil accounts.
 
-**Nota:** las direcciones del contrato y los balances pertenecen a la instancia local de Anvil. Al reiniciarla, el estado puede desaparecer y será necesario volver a desplegar el contrato.
+```bash
+cast send CONTRACT_ADDRESS "transfer(address,uint256)" RECIPIENT_ADDRESS 10000000000000000000 --rpc-url http://127.0.0.1:8545 --unlocked --from SENDER_ADDRESS
+```
 
-## Testing y cobertura
+With 18 decimals, `10000000000000000000` represents 10 tokens.
 
-El proyecto utiliza tres enfoques complementarios para comprobar el comportamiento del contrato.
+The command returns transaction information, including its hash, block, gas usage, and generated logs.
 
-### Pruebas unitarias
+**Note:** Contract addresses and balances belong to the local Anvil instance. Restarting Anvil may erase the local blockchain state, requiring the contract to be deployed again.
 
-Comprueban operaciones concretas, incluyendo transferencias, allowances, permisos, emisión y destrucción de tokens, pausado, eventos, errores y firmas `permit`.
+## Testing and Coverage
 
-**Resultado:** 72 pruebas unitarias superadas.
+The project uses three complementary approaches to verify the contract's behavior.
 
-### Fuzz testing
+### Unit Tests
 
-Utiliza entradas generadas automáticamente para explorar diferentes valores y comprobar las propiedades esperadas.
+These tests check individual operations, including transfers, allowances, access control, token minting and burning, pausing, events, custom errors, and `permit` signatures.
 
-Se han implementado 8 pruebas de fuzzing, con 256 casos por prueba en la configuración actual.
+**Result:** 72 unit tests passed.
 
-**Resultado:** 8 pruebas de fuzzing superadas.
+### Fuzz Testing
 
-### Invariant testing
+Fuzz testing uses automatically generated inputs to explore different values and verify expected properties.
 
-Verifica propiedades que deben mantenerse durante secuencias de operaciones generadas por Foundry.
+Eight fuzz tests have been implemented, with 256 cases per test in the current configuration.
 
-Se comprueban dos invariantes:
+**Result:** 8 fuzz tests passed.
 
-- `invariant_TotalSupplyEqualsBalances`: el suministro total coincide con la suma de los balances de las cuentas incluidas en el entorno de pruebas.
-- `invariant_TotalSupplyRemainsConstant`: el suministro total permanece constante durante las transferencias.
+### Invariant Testing
 
-La configuración actual ejecuta 256 secuencias (*runs*) con 128.000 llamadas al handler, sin reversiones ni casos descartados.
+Invariant testing verifies properties that must remain true across sequences of operations generated by Foundry.
 
-Estas invariantes corresponden al conjunto de operaciones y cuentas definido en el test actual; no representan una prueba exhaustiva de todas las funcionalidades del contrato.
+Two invariants are checked:
 
-### Resultados de cobertura
+- `invariant_TotalSupplyEqualsBalances`: the total supply equals the sum of the balances of the accounts included in the test environment.
+- `invariant_TotalSupplyRemainsConstant`: the total supply remains constant during token transfers.
 
-Resultados obtenidos mediante `forge coverage --report summary`:
+The current configuration executes 256 sequences (*runs*) with 128,000 handler calls, with no reverts or discarded cases.
 
-| Métrica | Cobertura |
+These invariants apply to the operations and accounts defined in the current test setup. They do not constitute an exhaustive verification of every contract feature.
+
+### Coverage Results
+
+Results obtained using `forge coverage --report summary`:
+
+| Metric | Coverage |
 |---|---:|
-| Líneas | 100 % |
-| Instrucciones | 100 % |
-| Ramas | 100 % |
-| Funciones | 100 % |
+| Lines | 100% |
+| Instructions | 100% |
+| Branches | 100% |
+| Functions | 100% |
 
-La ejecución completa de `forge test` ha finalizado con **81 pruebas superadas, 0 fallidas y 0 omitidas**, según el resumen registrado de Foundry.
+The recorded summary from the full `forge test` execution reports **81 tests passed, 0 failed, and 0 skipped**.
 
-La cobertura mide qué partes del código ejecutan las pruebas. No garantiza por sí sola la ausencia de errores o vulnerabilidades. El análisis de seguridad sigue siendo una parte importante del desarrollo.
+Coverage measures which parts of the code are exercised by tests. It does not, by itself, guarantee the absence of bugs or vulnerabilities. Security analysis remains an important part of the development process.
 
 ## Roadmap
 
-- [x] Implementación personalizada del contrato ERC-20.
-- [x] Gestión de balances, allowances y transferencias.
-- [x] Control de acceso y permisos de minter.
-- [x] Funciones de mint y burn.
-- [x] Límite máximo de suministro.
-- [x] Mecanismo de pausado.
-- [x] Implementación de `permit`.
-- [x] Pruebas unitarias.
+- [x] Custom ERC-20 contract implementation.
+- [x] Balance, allowance, and transfer management.
+- [x] Access control and minter permissions.
+- [x] Mint and burn functions.
+- [x] Maximum supply limit.
+- [x] Pausing mechanism.
+- [x] `permit` implementation.
+- [x] Unit tests.
 - [x] Fuzz testing.
 - [x] Invariant testing.
-- [x] Cobertura del 100 % en las métricas medidas.
-- [x] Script de despliegue con Foundry.
-- [x] Despliegue y comprobaciones manuales en Anvil.
+- [x] 100% coverage across the measured metrics.
+- [x] Foundry deployment script.
+- [x] Local deployment and manual checks using Anvil.
 
-## Mejoras futuras
+## Future Improvements
 
-- [ ] Revisar casos límite y posibles vulnerabilidades.
-- [ ] Realizar una revisión de seguridad más exhaustiva.
-- [ ] Ampliar la documentación técnica y los ejemplos de interacción.
-- [ ] Evaluar un despliegue en una testnet.
+- [ ] Review edge cases and potential vulnerabilities.
+- [ ] Conduct a more comprehensive security review.
+- [ ] Expand the technical documentation and interaction examples.
+- [ ] Evaluate deployment to a testnet.
 
-## Objetivo del proyecto
+## Project Goal
 
-Este proyecto busca comprender el funcionamiento de los estándares de Ethereum y aplicar buenas prácticas de programación, testing y seguridad de Smart Contracts.
+This project aims to understand Ethereum standards and apply good practices in smart contract development, testing, and security.
 
-Se ha desarrollado de forma progresiva, priorizando la comprensión de la lógica del contrato, la validación de su comportamiento y la reproducibilidad de los experimentos.
+It has been developed incrementally, prioritizing an understanding of the contract's logic, behavioral verification, and reproducibility of experiments.
 
-Es un proyecto educativo y **no está destinado actualmente a gestionar fondos reales**.
+This is an educational project and **is not currently intended to manage real funds**.
 
-## Autor
+## Author
 
-Proyecto personal de Ingeniería Informática centrado en Blockchain, Solidity, Smart Contracts y desarrollo Web3.
+Personal Computer Science and Engineering project focused on Blockchain, Solidity, Smart Contracts, and Web3 development.
 
 GitHub: [@maarcxxss](https://github.com/maarcxxss)
