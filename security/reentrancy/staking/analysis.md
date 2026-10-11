@@ -4,7 +4,7 @@
 
 This lab demonstrates a reentrancy vulnerability in a staking contract that transfers tokens before updating the caller's recorded balance.
 
-A malicious recipient can use an external callback to call the withdrawal function again while the original call is still executing.
+A malicious recipient can use an external callback to call the withdrawall function again while the original call is still executing.
 
 The vulnerable implementation violates the Checks-Effects-Interactions (CEI) pattern. The protected implementation updates the relevant state before making the external token call.
 
@@ -41,7 +41,7 @@ The victim and attacker have each deposited 100 tokens. The staking contract the
 
 ## 3. Root cause
 
-The vulnerable withdrawal function follows this order:
+The vulnerable withdrawall function follows this order:
 
 ```solidity
 uint256 amount = balances[msg.sender];
@@ -63,7 +63,7 @@ token.transfer(msg.sender, amount);
 
 An external call may transfer execution to another contract. In this lab, the token deliberately invokes `onTokenReceived()` on the recipient during the transfer.
 
-That callback allows the attacker to call `withdrawAll()` again before the first withdrawal has cleared the recorded balance.
+That callback allows the attacker to call `withdrawAll()` again before the first withdrawall has cleared the recorded balance.
 
 The attacker therefore re-enters the function while the original balance is still available.
 
@@ -94,13 +94,13 @@ token.startAttack();
 
 This enables the callback in `ReentrantToken`. It does not execute the attack by itself.
 
-The attacker then starts the withdrawal through:
+The attacker then starts the withdrawall through:
 
 ```solidity
 vulnerableAttacker.attack();
 ```
 
-### Step 3 — First withdrawal
+### Step 3 — First withdrawall
 
 `VulnerableStaking.withdrawAll()` reads:
 
@@ -128,13 +128,13 @@ The second call reads the same recorded balance:
 balances[attacker] = 100
 ```
 
-Because the vulnerable contract has not yet updated the balance, the second withdrawal passes the `amount > 0` check and initiates another transfer of 100 tokens.
+Because the vulnerable contract has not yet updated the balance, the second withdrawall passes the `amount > 0` check and initiates another transfer of 100 tokens.
 
 The attacker contract limits the callback to one reentrant attempt using the `reentered` flag.
 
-### Step 5 — Complete both withdrawals
+### Step 5 — Complete both withdrawalls
 
-The attacker receives 100 tokens from the reentrant withdrawal and another 100 from the original withdrawal.
+The attacker receives 100 tokens from the reentrant withdrawall and another 100 from the original withdrawall.
 
 The final state is:
 
@@ -153,7 +153,7 @@ The test demonstrates that the contract's accounting and its actual token holdin
 
 The protected implementation follows the CEI pattern.
 
-Its withdrawal sequence is:
+Its withdrawall sequence is:
 
 ```solidity
 uint256 amount = balances[msg.sender];
@@ -190,7 +190,7 @@ The following check fails:
 require(amount > 0, "Nothing to withdraw");
 ```
 
-The second withdrawal reverts. In this lab, the callback error is not caught by the token, so the revert propagates through the external call and reverts the entire original withdrawal transaction.
+The second withdrawall reverts. In this lab, the callback error is not caught by the token, so the revert propagates through the external call and reverts the entire original withdrawall transaction.
 
 ### Final state after the protected attack
 
@@ -241,7 +241,7 @@ forge test -vvvv
 
 This lab demonstrates one specific reentrancy path and one mitigation.
 
-The protected withdrawal function follows CEI for the balance being withdrawn, but that alone does not establish that the entire contract is secure.
+The protected withdrawall function follows CEI for the balance being withdrawn, but that alone does not establish that the entire contract is secure.
 
 A broader review should also consider:
 
@@ -259,7 +259,7 @@ The experiment demonstrates that reentrancy can occur when a contract makes an e
 
 In the vulnerable implementation, the attacker re-enters `withdrawAll()` while the original balance remains available and withdraws more tokens than its recorded deposit.
 
-In the protected implementation, the balance is cleared before the external interaction. The reentrant withdrawal fails, and the transaction reverts atomically.
+In the protected implementation, the balance is cleared before the external interaction. The reentrant withdrawall fails, and the transaction reverts atomically.
 
 The central lesson is:
 
