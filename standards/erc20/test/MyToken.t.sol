@@ -144,12 +144,12 @@ contract MyTokenTest is Test {
         uint256 amount = INITIAL_SUPPLY;
 
         vm.prank(owner);
-        token.transfer(account2, 250 * UNIT); // Transferimos 250 (quedan 1000-250 = 750)
+        token.transfer(account2, 250 * UNIT); // Transfer 250 (1000-250 = 750)
 
         vm.expectRevert(abi.encodeWithSelector(InsufficientBalance.selector, 750 * UNIT, amount));
 
         vm.prank(owner);
-        token.transfer(account2, amount); // Transferimos 1000 (y quedaban 750)
+        token.transfer(account2, amount); // Transfer 1000 (750)
     }
 
     function test_TransferZeroAddress() public {

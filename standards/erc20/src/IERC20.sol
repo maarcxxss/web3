@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 interface IERC20 {
-    // Funciones
+    // Functions
     function totalSupply() external view returns (uint256);
 
     function balanceOf(address account) external view returns (uint256);
@@ -15,7 +15,7 @@ interface IERC20 {
 
     function transferFrom(address from, address to, uint256 value) external returns (bool);
 
-    // Eventos
+    // Events
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     event Approval(address indexed owner, address indexed spender, uint256 value);
