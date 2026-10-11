@@ -245,6 +245,9 @@ La cobertura mide qué partes del código ejecutan las pruebas. No garantiza por
 - [x] Cobertura del 100 % en las métricas medidas.
 - [x] Script de despliegue con Foundry.
 - [x] Despliegue y comprobaciones manuales en Anvil.
+
+## Mejoras futuras
+
 - [ ] Revisar casos límite y posibles vulnerabilidades.
 - [ ] Realizar una revisión de seguridad más exhaustiva.
 - [ ] Ampliar la documentación técnica y los ejemplos de interacción.
