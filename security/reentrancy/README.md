@@ -41,11 +41,11 @@ security/
 
 The vulnerable staking contract transfers tokens before clearing the caller's recorded balance.
 
-During the external token transfer, the malicious token calls the recipient's `onTokenReceived()` callback. The attacker uses this callback to re-enter `withdrawAll()` before the original withdrawal has updated the staking balance.
+During the external token transfer, the malicious token calls the recipient's `onTokenReceived()` callback. The attacker uses this callback to re-enter `withdrawAll()` before the original withdrawall has updated the staking balance.
 
 As a result, the attacker can withdraw more tokens than its recorded deposit.
 
-The protected contract reverses this order: it clears the recorded balance before transferring tokens. When the attacker attempts to re-enter, the second withdrawal fails because the recorded balance is already zero.
+The protected contract reverses this order: it clears the recorded balance before transferring tokens. When the attacker attempts to re-enter, the second withdrawall fails because the recorded balance is already zero.
 
 ## Implementation comparison
 
@@ -54,7 +54,7 @@ The protected contract reverses this order: it clears the recorded balance befor
 | `VulnerableStaking.sol` | Demonstrates the reentrancy vulnerability. |
 | `SecureStaking.sol` | Applies CEI to prevent the demonstrated attack. |
 | `ReentrantToken.sol` | Introduces an intentional callback during token transfers. |
-| `ReentrancyAttacker.sol` | Deposits tokens and attempts a reentrant withdrawal. |
+| `ReentrancyAttacker.sol` | Deposits tokens and attempts a reentrant withdrawall. |
 | `Reentrancy.t.sol` | Tests initialization, successful exploitation, and mitigation. |
 
 ## Run the lab
