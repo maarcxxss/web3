@@ -20,8 +20,8 @@ contract StakingFuzzTest is Test {
     // TEST ACCOUNTS
     // =============================================================
 
-    address private alice = makeAddr("fuzz-alice");
-    address private bob = makeAddr("fuzz-bob");
+    address private marta = makeAddr("fuzz-marta");
+    address private marcos = makeAddr("fuzz-marcos");
 
     // =============================================================
     // CONTRACTS UNDER TEST
@@ -40,8 +40,8 @@ contract StakingFuzzTest is Test {
         rewardToken = new MyToken(INITIAL_SUPPLY / UNIT);
         staking = new Staking(address(token), address(rewardToken));
 
-        token.transfer(alice, USER_BALANCE);
-        token.transfer(bob, USER_BALANCE);
+        token.transfer(marta, USER_BALANCE);
+        token.transfer(marcos, USER_BALANCE);
     }
 
     // =============================================================
@@ -49,42 +49,42 @@ contract StakingFuzzTest is Test {
     // =============================================================
 
     /// @notice Depositing and withdrawing preserves staking accounting and token balances.
-    /// @dev Generated amounts are bounded by Alice's wallet balance and deposited amount.
+    /// @dev Generated amounts are bounded by Marta's wallet balance and deposited amount.
     function testFuzz_StakeAndWithdraw(uint256 stakeSeed, uint256 withdrawSeed) public {
         uint256 stakeAmount = bound(stakeSeed, 1, USER_BALANCE);
         uint256 withdrawAmount = bound(withdrawSeed, 1, stakeAmount);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         staking.withdraw(withdrawAmount);
         vm.stopPrank();
 
         uint256 expectedBalance = stakeAmount - withdrawAmount;
-        assertEq(staking.stakedBalance(alice), expectedBalance);
+        assertEq(staking.stakedBalance(marta), expectedBalance);
         assertEq(staking.totalStaked(), expectedBalance);
         assertEq(token.balanceOf(address(staking)), expectedBalance);
-        assertEq(token.balanceOf(alice), USER_BALANCE - expectedBalance);
+        assertEq(token.balanceOf(marta), USER_BALANCE - expectedBalance);
     }
 
     /// @notice The deposits of two users add up to the system-wide total.
-    function testFuzz_MultipleUsersMaintainTotal(uint256 aliceSeed, uint256 bobSeed) public {
-        uint256 aliceAmount = bound(aliceSeed, 1, USER_BALANCE);
-        uint256 bobAmount = bound(bobSeed, 1, USER_BALANCE);
+    function testFuzz_MultipleUsersMaintainTotal(uint256 martaSeed, uint256 marcosSeed) public {
+        uint256 martaAmount = bound(martaSeed, 1, USER_BALANCE);
+        uint256 marcosAmount = bound(marcosSeed, 1, USER_BALANCE);
 
-        vm.startPrank(alice);
-        token.approve(address(staking), aliceAmount);
-        staking.stake(aliceAmount);
+        vm.startPrank(marta);
+        token.approve(address(staking), martaAmount);
+        staking.stake(martaAmount);
         vm.stopPrank();
 
-        vm.startPrank(bob);
-        token.approve(address(staking), bobAmount);
-        staking.stake(bobAmount);
+        vm.startPrank(marcos);
+        token.approve(address(staking), marcosAmount);
+        staking.stake(marcosAmount);
         vm.stopPrank();
 
-        uint256 expectedTotal = aliceAmount + bobAmount;
-        assertEq(staking.stakedBalance(alice), aliceAmount);
-        assertEq(staking.stakedBalance(bob), bobAmount);
+        uint256 expectedTotal = martaAmount + marcosAmount;
+        assertEq(staking.stakedBalance(marta), martaAmount);
+        assertEq(staking.stakedBalance(marcos), marcosAmount);
         assertEq(staking.totalStaked(), expectedTotal);
         assertEq(token.balanceOf(address(staking)), expectedTotal);
     }
@@ -95,34 +95,34 @@ contract StakingFuzzTest is Test {
 
     /// @notice Each user earns their proportional share of the elapsed reward period.
     /// @dev The tolerance accounts for rounding in Solidity's integer division.
-    function testFuzz_RewardsFollowStakeProportions(uint256 aliceSeed, uint256 bobSeed, uint256 elapsedSeed) public {
-        uint256 aliceAmount = bound(aliceSeed, 1, USER_BALANCE);
-        uint256 bobAmount = bound(bobSeed, 1, USER_BALANCE);
+    function testFuzz_RewardsFollowStakeProportions(uint256 martaSeed, uint256 marcosSeed, uint256 elapsedSeed) public {
+        uint256 martaAmount = bound(martaSeed, 1, USER_BALANCE);
+        uint256 marcosAmount = bound(marcosSeed, 1, USER_BALANCE);
         uint256 elapsed = bound(elapsedSeed, 1, staking.rewardsDuration());
         uint256 rewardFunding = 700 * UNIT;
 
         rewardToken.approve(address(staking), rewardFunding);
         staking.fundRewards(rewardFunding);
 
-        vm.startPrank(alice);
-        token.approve(address(staking), aliceAmount);
-        staking.stake(aliceAmount);
+        vm.startPrank(marta);
+        token.approve(address(staking), martaAmount);
+        staking.stake(martaAmount);
         vm.stopPrank();
 
-        vm.startPrank(bob);
-        token.approve(address(staking), bobAmount);
-        staking.stake(bobAmount);
+        vm.startPrank(marcos);
+        token.approve(address(staking), marcosAmount);
+        staking.stake(marcosAmount);
         vm.stopPrank();
 
         vm.warp(block.timestamp + elapsed);
 
         uint256 generatedRewards = staking.rewardRate() * elapsed;
-        uint256 totalStake = aliceAmount + bobAmount;
-        uint256 expectedAlice = generatedRewards * aliceAmount / totalStake;
-        uint256 expectedBob = generatedRewards * bobAmount / totalStake;
+        uint256 totalStake = martaAmount + marcosAmount;
+        uint256 expectedMarta = generatedRewards * martaAmount / totalStake;
+        uint256 expectedMarcos = generatedRewards * marcosAmount / totalStake;
 
-        assertApproxEqAbs(staking.earned(alice), expectedAlice, 100);
-        assertApproxEqAbs(staking.earned(bob), expectedBob, 100);
+        assertApproxEqAbs(staking.earned(marta), expectedMarta, 100);
+        assertApproxEqAbs(staking.earned(marcos), expectedMarcos, 100);
     }
 
     // =============================================================

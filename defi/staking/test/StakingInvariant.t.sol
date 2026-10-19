@@ -24,8 +24,8 @@ contract StakingHandler is Test {
     MyToken public rewardToken;
     Staking public staking;
 
-    address public alice = makeAddr("invariant-alice");
-    address public bob = makeAddr("invariant-bob");
+    address public marta = makeAddr("invariant-marta");
+    address public marcos = makeAddr("invariant-marcos");
 
     // =============================================================
     // SETUP
@@ -36,8 +36,8 @@ contract StakingHandler is Test {
         rewardToken = new MyToken(INITIAL_SUPPLY / UNIT);
         staking = new Staking(address(token), address(rewardToken));
 
-        token.transfer(alice, INITIAL_USER_BALANCE);
-        token.transfer(bob, INITIAL_USER_BALANCE);
+        token.transfer(marta, INITIAL_USER_BALANCE);
+        token.transfer(marcos, INITIAL_USER_BALANCE);
         token.approve(address(staking), type(uint256).max);
         rewardToken.approve(address(staking), type(uint256).max);
     }
@@ -94,9 +94,9 @@ contract StakingHandler is Test {
         vm.warp(block.timestamp + elapsed);
     }
 
-    /// @dev Alternates between Alice and Bob to keep the participant set bounded.
+    /// @dev Alternates between Marta and Marcos to keep the participant set bounded.
     function _user(uint256 seed) private view returns (address) {
-        return seed % 2 == 0 ? alice : bob;
+        return seed % 2 == 0 ? marta : marcos;
     }
 }
 
@@ -131,7 +131,7 @@ contract StakingInvariantTest is Test {
 
     /// @notice The recorded total matches user balances and is backed by the staking tokens.
     function invariant_TotalStakeMatchesUsersAndTokenBalance() public view {
-        uint256 usersStake = staking.stakedBalance(handler.alice()) + staking.stakedBalance(handler.bob());
+        uint256 usersStake = staking.stakedBalance(handler.marta()) + staking.stakedBalance(handler.marcos());
 
         assertEq(staking.totalStaked(), usersStake);
         assertGe(token.balanceOf(address(staking)), staking.totalStaked());
@@ -143,7 +143,7 @@ contract StakingInvariantTest is Test {
 
     /// @notice The reward token balance backs the reserve, which covers users' accrued debt.
     function invariant_RewardReserveRemainsBackedAndCoversDebt() public view {
-        uint256 usersDebt = staking.earned(handler.alice()) + staking.earned(handler.bob());
+        uint256 usersDebt = staking.earned(handler.marta()) + staking.earned(handler.marcos());
 
         assertGe(rewardToken.balanceOf(address(staking)), staking.reservedRewards());
         assertGe(staking.reservedRewards(), usersDebt);

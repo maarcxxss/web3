@@ -20,8 +20,8 @@ contract StakingTest is Test {
     // TEST ACCOUNTS
     // =============================================================
 
-    address private alice = makeAddr("alice");
-    address private bob = makeAddr("bob");
+    address private marta = makeAddr("marta");
+    address private marcos = makeAddr("marcos");
 
     // =============================================================
     // CONTRACTS UNDER TEST
@@ -40,8 +40,8 @@ contract StakingTest is Test {
         rewardToken = new MyToken(INITIAL_SUPPLY / UNIT);
         staking = new Staking(address(token), address(rewardToken));
 
-        token.transfer(alice, 100 * UNIT);
-        token.transfer(bob, 100 * UNIT);
+        token.transfer(marta, 100 * UNIT);
+        token.transfer(marcos, 100 * UNIT);
     }
 
     // =============================================================
@@ -56,8 +56,8 @@ contract StakingTest is Test {
         assertEq(staking.reservedRewards(), 0);
         assertEq(staking.rewardRate(), 0);
         assertEq(staking.rewardsDuration(), 7 days);
-        assertEq(staking.stakedBalance(alice), 0);
-        assertEq(staking.stakedBalance(bob), 0);
+        assertEq(staking.stakedBalance(marta), 0);
+        assertEq(staking.stakedBalance(marcos), 0);
     }
 
     // =============================================================
@@ -91,32 +91,32 @@ contract StakingTest is Test {
     /* --- Successful operations --- */
 
     function test_Stake() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
         vm.stopPrank();
 
-        assertEq(token.balanceOf(alice), 50 * UNIT);
+        assertEq(token.balanceOf(marta), 50 * UNIT);
         assertEq(token.balanceOf(address(staking)), 50 * UNIT);
-        assertEq(staking.stakedBalance(alice), 50 * UNIT);
+        assertEq(staking.stakedBalance(marta), 50 * UNIT);
     }
 
     function test_MultipleUsers() public {
-        // Alice hace stake de 50
-        vm.startPrank(alice);
+        // Marta hace stake de 50
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
         vm.stopPrank();
 
-        // Bob hace stake de 30
-        vm.startPrank(bob);
+        // Marcos hace stake de 30
+        vm.startPrank(marcos);
         token.approve(address(staking), 30 * UNIT);
         staking.stake(30 * UNIT);
         vm.stopPrank();
 
         // Comprobamos los balances individuales
-        assertEq(staking.stakedBalance(alice), 50 * UNIT);
-        assertEq(staking.stakedBalance(bob), 30 * UNIT);
+        assertEq(staking.stakedBalance(marta), 50 * UNIT);
+        assertEq(staking.stakedBalance(marcos), 30 * UNIT);
 
         // El contrato posee 80 MTO en total
         assertEq(token.balanceOf(address(staking)), 80 * UNIT);
@@ -127,19 +127,19 @@ contract StakingTest is Test {
     function test_RevertStakeZero() public {
         vm.expectRevert(Staking.AmountMustBeGreaterThanZero.selector);
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.stake(0);
     }
 
     function test_RevertStakeWithoutApproval() public {
         vm.expectRevert();
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.stake(50 * UNIT);
     }
 
     function test_RevertStakeMoreThanWalletBalance() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 101 * UNIT);
         vm.expectRevert();
         staking.stake(101 * UNIT);
@@ -149,15 +149,15 @@ contract StakingTest is Test {
     function test_RevertStakeWithFeeToken() public {
         FeeToken feeToken = new FeeToken(1000 * UNIT);
         Staking feeStaking = new Staking(address(feeToken), address(rewardToken));
-        address aliceFee = makeAddr("aliceFee");
-        feeToken.transfer(aliceFee, 200 * UNIT);
-        vm.startPrank(aliceFee);
+        address martaFee = makeAddr("martaFee");
+        feeToken.transfer(martaFee, 200 * UNIT);
+        vm.startPrank(martaFee);
         feeToken.approve(address(feeStaking), 100 * UNIT);
         vm.expectRevert(abi.encodeWithSelector(Staking.UnexpectedAmountReceived.selector, 100 * UNIT, 98 * UNIT));
         feeStaking.stake(100 * UNIT);
         vm.stopPrank();
 
-        assertEq(feeStaking.stakedBalance(aliceFee), 0);
+        assertEq(feeStaking.stakedBalance(martaFee), 0);
         assertEq(feeStaking.totalStaked(), 0);
         assertEq(feeToken.balanceOf(address(feeStaking)), 0);
     }
@@ -165,26 +165,26 @@ contract StakingTest is Test {
     function test_RevertStakeWhenTokenTransferFromReturnsFalse() public {
         CoverageERC20 coverageToken = new CoverageERC20(100 * UNIT);
         Staking coverageStaking = new Staking(address(coverageToken), address(rewardToken));
-        coverageToken.transfer(alice, 10 * UNIT);
+        coverageToken.transfer(marta, 10 * UNIT);
         coverageToken.setTransferFromReturns(false);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         coverageToken.approve(address(coverageStaking), UNIT);
         vm.expectRevert(Staking.StakingTokenTransferFailed.selector);
         coverageStaking.stake(UNIT);
         vm.stopPrank();
 
-        assertEq(coverageStaking.stakedBalance(alice), 0);
+        assertEq(coverageStaking.stakedBalance(marta), 0);
         assertEq(coverageStaking.totalStaked(), 0);
     }
 
     function test_RevertOnReentrantStake() public {
         CoverageERC20 coverageToken = new CoverageERC20(100 * UNIT);
         Staking coverageStaking = new Staking(address(coverageToken), address(rewardToken));
-        coverageToken.transfer(alice, 10 * UNIT);
+        coverageToken.transfer(marta, 10 * UNIT);
         coverageToken.setCallback(address(coverageStaking), abi.encodeCall(Staking.stake, (UNIT)), false);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         coverageToken.approve(address(coverageStaking), UNIT);
         coverageStaking.stake(UNIT);
         vm.stopPrank();
@@ -196,7 +196,7 @@ contract StakingTest is Test {
         }
         assertFalse(coverageToken.callbackSucceeded());
         assertEq(callbackError, Staking.ReentrantCall.selector);
-        assertEq(coverageStaking.stakedBalance(alice), UNIT);
+        assertEq(coverageStaking.stakedBalance(marta), UNIT);
         assertEq(coverageStaking.totalStaked(), UNIT);
     }
 
@@ -207,38 +207,38 @@ contract StakingTest is Test {
     /* --- Successful operations --- */
 
     function test_Withdraw() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
         staking.withdraw(20 * UNIT);
         vm.stopPrank();
 
-        assertEq(token.balanceOf(alice), 70 * UNIT);
+        assertEq(token.balanceOf(marta), 70 * UNIT);
         assertEq(token.balanceOf(address(staking)), 30 * UNIT);
-        assertEq(staking.stakedBalance(alice), 30 * UNIT);
+        assertEq(staking.stakedBalance(marta), 30 * UNIT);
     }
 
     function test_WithdrawDoesNotAffectOtherUsers() public {
-        // Alice hace stake de 50 tokens
-        vm.startPrank(alice);
+        // Marta hace stake de 50 tokens
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
         vm.stopPrank();
 
-        // Bob hace stake de 30 tokens
-        vm.startPrank(bob);
+        // Marcos hace stake de 30 tokens
+        vm.startPrank(marcos);
         token.approve(address(staking), 30 * UNIT);
         staking.stake(30 * UNIT);
         vm.stopPrank();
 
-        // Alice retira 20 tokens
-        vm.startPrank(alice);
+        // Marta retira 20 tokens
+        vm.startPrank(marta);
         staking.withdraw(20 * UNIT);
         vm.stopPrank();
 
         // Comprobamos los balances internos
-        assertEq(staking.stakedBalance(alice), 30 * UNIT);
-        assertEq(staking.stakedBalance(bob), 30 * UNIT);
+        assertEq(staking.stakedBalance(marta), 30 * UNIT);
+        assertEq(staking.stakedBalance(marcos), 30 * UNIT);
 
         // Comprobamos los tokens reales que tiene Staking
         assertEq(token.balanceOf(address(staking)), 60 * UNIT);
@@ -253,16 +253,16 @@ contract StakingTest is Test {
     function test_WithdrawEntireStake() public {
         uint256 amount = 50 * UNIT;
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), amount);
         staking.stake(amount);
         staking.withdraw(amount);
         vm.stopPrank();
 
-        assertEq(staking.stakedBalance(alice), 0);
+        assertEq(staking.stakedBalance(marta), 0);
         assertEq(staking.totalStaked(), 0);
         assertEq(token.balanceOf(address(staking)), 0);
-        assertEq(token.balanceOf(alice), 100 * UNIT);
+        assertEq(token.balanceOf(marta), 100 * UNIT);
     }
 
     /* --- Reverts --- */
@@ -270,12 +270,12 @@ contract StakingTest is Test {
     function test_RevertWithdrawZero() public {
         vm.expectRevert(Staking.AmountMustBeGreaterThanZero.selector);
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.withdraw(0);
     }
 
     function test_RevertWithdrawMoreThanStaked() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
         vm.expectRevert(abi.encodeWithSelector(Staking.InsufficientStakedBalance.selector, 50 * UNIT, 60 * UNIT));
@@ -286,27 +286,27 @@ contract StakingTest is Test {
     function test_RevertWithdrawWithoutStake() public {
         vm.expectRevert(abi.encodeWithSelector(Staking.InsufficientStakedBalance.selector, 0, 1));
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.withdraw(1);
     }
 
     function test_RevertWithdrawWhenTokenTransferReturnsFalse() public {
         CoverageERC20 coverageToken = new CoverageERC20(100 * UNIT);
         Staking coverageStaking = new Staking(address(coverageToken), address(rewardToken));
-        coverageToken.transfer(alice, 10 * UNIT);
+        coverageToken.transfer(marta, 10 * UNIT);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         coverageToken.approve(address(coverageStaking), 5 * UNIT);
         coverageStaking.stake(5 * UNIT);
         vm.stopPrank();
 
         coverageToken.setTransferReturns(false);
         vm.expectRevert(Staking.StakingTokenTransferFailed.selector);
-        vm.prank(alice);
+        vm.prank(marta);
         coverageStaking.withdraw(2 * UNIT);
 
         // El revert revierte también los cambios de estado previos a transfer.
-        assertEq(coverageStaking.stakedBalance(alice), 5 * UNIT);
+        assertEq(coverageStaking.stakedBalance(marta), 5 * UNIT);
         assertEq(coverageStaking.totalStaked(), 5 * UNIT);
     }
 
@@ -317,23 +317,23 @@ contract StakingTest is Test {
     /* --- Events --- */
 
     function test_StakeEmitsEvent() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
 
         vm.expectEmit(true, false, false, true);
-        emit IStaking.Staked(alice, 50 * UNIT);
+        emit IStaking.Staked(marta, 50 * UNIT);
 
         staking.stake(50 * UNIT);
         vm.stopPrank();
     }
 
     function test_WithdrawEmitsEvent() public {
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
 
         vm.expectEmit(true, false, false, true);
-        emit IStaking.Withdrawn(alice, 20 * UNIT);
+        emit IStaking.Withdrawn(marta, 20 * UNIT);
 
         staking.withdraw(20 * UNIT);
         vm.stopPrank();
@@ -384,14 +384,14 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), firstFunding);
         staking.fundRewards(firstFunding);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Alice permanece en staking durante todo el periodo y actualiza la contabilidad al retirarse.
+        // Marta permanece en staking durante todo el periodo y actualiza la contabilidad al retirarse.
         vm.warp(staking.periodFinish());
-        vm.prank(alice);
+        vm.prank(marta);
         staking.withdraw(stakeAmount);
 
         uint256 previousReserve = staking.reservedRewards();
@@ -432,7 +432,7 @@ contract StakingTest is Test {
     function test_RevertFundRewardsUnauthorized() public {
         vm.expectRevert(Staking.NotOwner.selector);
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.fundRewards(UNIT);
     }
 
@@ -474,26 +474,26 @@ contract StakingTest is Test {
 
     function test_RewardsAreDistributedProportionally() public {
         uint256 rewardAmount = 700 * UNIT;
-        uint256 aliceStake = 100 * UNIT;
-        uint256 bobStake = 300 * UNIT;
+        uint256 martaStake = 100 * UNIT;
+        uint256 marcosStake = 300 * UNIT;
 
         // Financiamos el periodo de recompensas.
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        // Bob necesita 200 tokens adicionales para depositar 300.
-        token.transfer(bob, 200 * UNIT);
+        // Marcos necesita 200 tokens adicionales para depositar 300.
+        token.transfer(marcos, 200 * UNIT);
 
-        // Alice deposita 100 tokens.
-        vm.startPrank(alice);
-        token.approve(address(staking), aliceStake);
-        staking.stake(aliceStake);
+        // Marta deposita 100 tokens.
+        vm.startPrank(marta);
+        token.approve(address(staking), martaStake);
+        staking.stake(martaStake);
         vm.stopPrank();
 
-        // Bob deposita 300 tokens.
-        vm.startPrank(bob);
-        token.approve(address(staking), bobStake);
-        staking.stake(bobStake);
+        // Marcos deposita 300 tokens.
+        vm.startPrank(marcos);
+        token.approve(address(staking), marcosStake);
+        staking.stake(marcosStake);
         vm.stopPrank();
 
         // Avanzamos un día.
@@ -502,11 +502,11 @@ contract StakingTest is Test {
 
         // Calculamos la distribución esperada.
         uint256 totalRewards = staking.rewardRate() * elapsed;
-        uint256 expectedAlice = totalRewards / 4;
-        uint256 expectedBob = totalRewards * 3 / 4;
+        uint256 expectedMarta = totalRewards / 4;
+        uint256 expectedMarcos = totalRewards * 3 / 4;
 
-        assertApproxEqAbs(staking.earned(alice), expectedAlice, 1e12);
-        assertApproxEqAbs(staking.earned(bob), expectedBob, 1e12);
+        assertApproxEqAbs(staking.earned(marta), expectedMarta, 1e12);
+        assertApproxEqAbs(staking.earned(marcos), expectedMarcos, 1e12);
     }
 
     function test_NoRewardsAccumulateWithoutStakers() public {
@@ -530,8 +530,8 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), firstAmount);
         staking.fundRewards(firstAmount);
 
-        // Día 0: Alice deposita 100 tokens.
-        vm.startPrank(alice);
+        // Día 0: Marta deposita 100 tokens.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
@@ -539,25 +539,25 @@ contract StakingTest is Test {
         // Día 1: transcurre un día.
         vm.warp(block.timestamp + 1 days);
 
-        // Bob entra cuando Alice ya lleva un día participando.
-        vm.startPrank(bob);
+        // Marcos entra cuando Marta ya lleva un día participando.
+        vm.startPrank(marcos);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // Día 2: ambos han participado durante tiempos distintos.
         vm.warp(block.timestamp + 1 days);
-        uint256 aliceRewards = staking.earned(alice);
-        uint256 bobRewards = staking.earned(bob);
+        uint256 martaRewards = staking.earned(marta);
+        uint256 marcosRewards = staking.earned(marcos);
 
-        // Alice debe tener aproximadamente 150 tokens.
-        assertApproxEqAbs(aliceRewards, 150 * UNIT, 10 ** 12);
+        // Marta debe tener aproximadamente 150 tokens.
+        assertApproxEqAbs(martaRewards, 150 * UNIT, 10 ** 12);
 
-        // Bob debe tener aproximadamente 50 tokens.
-        assertApproxEqAbs(bobRewards, 50 * UNIT, 10 ** 12);
+        // Marcos debe tener aproximadamente 50 tokens.
+        assertApproxEqAbs(marcosRewards, 50 * UNIT, 10 ** 12);
 
-        // Alice debe haber ganado aproximadamente el triple.
-        assertApproxEqAbs(aliceRewards, bobRewards * 3, 10 ** 12);
+        // Marta debe haber ganado aproximadamente el triple.
+        assertApproxEqAbs(martaRewards, marcosRewards * 3, 10 ** 12);
     }
 
     // =============================================================
@@ -574,29 +574,29 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        // Alice deposita sus tokens.
-        vm.startPrank(alice);
+        // Marta deposita sus tokens.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // Dejamos que se acumulen recompensas.
         vm.warp(block.timestamp + 1 days);
-        uint256 expectedReward = staking.earned(alice);
-        uint256 balanceBefore = rewardToken.balanceOf(alice);
+        uint256 expectedReward = staking.earned(marta);
+        uint256 balanceBefore = rewardToken.balanceOf(marta);
         uint256 reserveBefore = staking.reservedRewards();
 
         vm.expectEmit(true, false, false, true);
-        emit IStaking.RewardPaid(alice, expectedReward);
+        emit IStaking.RewardPaid(marta, expectedReward);
 
-        vm.prank(alice);
+        vm.prank(marta);
         staking.getReward();
 
-        assertEq(rewardToken.balanceOf(alice), balanceBefore + expectedReward);
+        assertEq(rewardToken.balanceOf(marta), balanceBefore + expectedReward);
         assertEq(staking.reservedRewards(), reserveBefore - expectedReward);
-        assertEq(staking.rewards(alice), 0);
-        assertEq(staking.earned(alice), 0);
-        assertEq(staking.stakedBalance(alice), stakeAmount);
+        assertEq(staking.rewards(marta), 0);
+        assertEq(staking.earned(marta), 0);
+        assertEq(staking.stakedBalance(marta), stakeAmount);
         assertEq(token.balanceOf(address(staking)), stakeAmount);
     }
 
@@ -609,22 +609,22 @@ contract StakingTest is Test {
         coverageRewardToken.approve(address(coverageStaking), rewardFunding);
         coverageStaking.fundRewards(rewardFunding);
 
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(coverageStaking), stakeAmount);
         coverageStaking.stake(stakeAmount);
         vm.stopPrank();
 
         vm.warp(block.timestamp + 1 days);
         uint256 reserveBeforeClaim = coverageStaking.reservedRewards();
-        assertGt(coverageStaking.earned(alice), 0);
+        assertGt(coverageStaking.earned(marta), 0);
 
         coverageRewardToken.setTransferReturns(false);
         vm.expectRevert(Staking.RewardsTokenTransferFailed.selector);
-        vm.prank(alice);
+        vm.prank(marta);
         coverageStaking.getReward();
 
         // La operación revertida no borra la deuda ni reduce la reserva.
-        assertGt(coverageStaking.earned(alice), 0);
+        assertGt(coverageStaking.earned(marta), 0);
         assertEq(coverageStaking.reservedRewards(), reserveBeforeClaim);
     }
 
@@ -636,25 +636,25 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), firstAmount);
         staking.fundRewards(firstAmount);
 
-        // Alice hace staking.
-        vm.startPrank(alice);
+        // Marta hace staking.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // Dejar que se acumulen recompensas.
         vm.warp(block.timestamp + 1 days);
-        uint256 pendingRewards = staking.earned(alice);
+        uint256 pendingRewards = staking.earned(marta);
         assertGt(pendingRewards, 0);
         uint256 reserveBeforeClaim = staking.reservedRewards();
 
-        // Alice reclama las recompensas.
-        vm.prank(alice);
+        // Marta reclama las recompensas.
+        vm.prank(marta);
         staking.getReward();
 
         // La reserva disminuye exactamente lo reclamado.
         assertEq(staking.reservedRewards(), reserveBeforeClaim - pendingRewards);
-        uint256 balanceAfterFirstClaim = rewardToken.balanceOf(alice);
+        uint256 balanceAfterFirstClaim = rewardToken.balanceOf(marta);
         assertEq(balanceAfterFirstClaim, pendingRewards);
 
         // Termina el primer periodo.
@@ -664,20 +664,20 @@ contract StakingTest is Test {
         uint256 secondAmount = 200 * UNIT;
         rewardToken.approve(address(staking), secondAmount);
         staking.fundRewards(secondAmount);
-        uint256 pendingAfterFirstClaim = staking.earned(alice);
+        uint256 pendingAfterFirstClaim = staking.earned(marta);
         assertGt(pendingAfterFirstClaim, 0);
-        uint256 balanceBeforeSecondClaim = rewardToken.balanceOf(alice);
-        vm.prank(alice);
+        uint256 balanceBeforeSecondClaim = rewardToken.balanceOf(marta);
+        vm.prank(marta);
         staking.getReward();
-        assertEq(rewardToken.balanceOf(alice), balanceBeforeSecondClaim + pendingAfterFirstClaim);
-        assertEq(staking.earned(alice), 0);
+        assertEq(rewardToken.balanceOf(marta), balanceBeforeSecondClaim + pendingAfterFirstClaim);
+        assertEq(staking.earned(marta), 0);
 
         // Una tercera reclamación no debe pagar nada adicional.
-        uint256 balanceAfterSecondClaim = rewardToken.balanceOf(alice);
-        vm.prank(alice);
+        uint256 balanceAfterSecondClaim = rewardToken.balanceOf(marta);
+        vm.prank(marta);
         staking.getReward();
 
-        assertEq(rewardToken.balanceOf(alice), balanceAfterSecondClaim);
+        assertEq(rewardToken.balanceOf(marta), balanceAfterSecondClaim);
     }
 
     function test_ReserveRemainsCorrectWithMultipleUsersClaiming() public {
@@ -687,43 +687,43 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        // Alice deposita.
-        vm.startPrank(alice);
+        // Marta deposita.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Bob deposita en el mismo instante.
-        vm.startPrank(bob);
+        // Marcos deposita en el mismo instante.
+        vm.startPrank(marcos);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // Ambos acumulan recompensas durante un día.
         vm.warp(block.timestamp + 1 days);
-        uint256 alicePending = staking.earned(alice);
-        uint256 bobPending = staking.earned(bob);
+        uint256 martaPending = staking.earned(marta);
+        uint256 marcosPending = staking.earned(marcos);
         uint256 reserveBefore = staking.reservedRewards();
-        assertGt(alicePending, 0);
-        assertGt(bobPending, 0);
+        assertGt(martaPending, 0);
+        assertGt(marcosPending, 0);
 
-        // Alice reclama sus recompensas.
-        vm.prank(alice);
+        // Marta reclama sus recompensas.
+        vm.prank(marta);
         staking.getReward();
-        assertEq(staking.reservedRewards(), reserveBefore - alicePending);
+        assertEq(staking.reservedRewards(), reserveBefore - martaPending);
 
-        // Bob todavía debe conservar sus recompensas pendientes.
-        assertApproxEqAbs(staking.earned(bob), bobPending, 10 ** 12);
+        // Marcos todavía debe conservar sus recompensas pendientes.
+        assertApproxEqAbs(staking.earned(marcos), marcosPending, 10 ** 12);
 
-        // Bob reclama sus recompensas.
-        vm.prank(bob);
+        // Marcos reclama sus recompensas.
+        vm.prank(marcos);
         staking.getReward();
-        assertEq(staking.reservedRewards(), reserveBefore - alicePending - bobPending);
+        assertEq(staking.reservedRewards(), reserveBefore - martaPending - marcosPending);
 
         // La reserva debe seguir respaldada por el saldo del contrato.
         assertGe(rewardToken.balanceOf(address(staking)), staking.reservedRewards());
-        assertEq(staking.earned(alice), 0);
-        assertEq(staking.earned(bob), 0);
+        assertEq(staking.earned(marta), 0);
+        assertEq(staking.earned(marcos), 0);
     }
 
     // =============================================================
@@ -739,28 +739,28 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        // Alice necesita 100 tokens adicionales para depositar 100 + 100.
-        token.transfer(alice, 100 * UNIT);
-        vm.startPrank(alice);
+        // Marta necesita 100 tokens adicionales para depositar 100 + 100.
+        token.transfer(marta, 100 * UNIT);
+        vm.startPrank(marta);
         token.approve(address(staking), 2 * stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Alice mantiene 100 tokens durante un día.
+        // Marta mantiene 100 tokens durante un día.
         vm.warp(block.timestamp + 1 days);
-        uint256 rewardsBeforeAdditionalStake = staking.earned(alice);
+        uint256 rewardsBeforeAdditionalStake = staking.earned(marta);
 
-        // Alice deposita otros 100 tokens.
-        vm.prank(alice);
+        // Marta deposita otros 100 tokens.
+        vm.prank(marta);
         staking.stake(stakeAmount);
 
         // Las recompensas previas deben conservarse.
-        assertEq(staking.rewards(alice), rewardsBeforeAdditionalStake);
-        assertEq(staking.stakedBalance(alice), 2 * stakeAmount);
+        assertEq(staking.rewards(marta), rewardsBeforeAdditionalStake);
+        assertEq(staking.stakedBalance(marta), 2 * stakeAmount);
 
-        // A partir de aquí, Alice acumulará con 200 tokens.
+        // A partir de aquí, Marta acumulará con 200 tokens.
         vm.warp(block.timestamp + 1 days);
-        assertGt(staking.earned(alice), rewardsBeforeAdditionalStake);
+        assertGt(staking.earned(marta), rewardsBeforeAdditionalStake);
     }
 
     function test_PartialWithdrawPreservesPreviousRewards() public {
@@ -770,28 +770,28 @@ contract StakingTest is Test {
 
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Alice mantiene 100 tokens durante un día.
+        // Marta mantiene 100 tokens durante un día.
         vm.warp(block.timestamp + 1 days);
-        uint256 rewardsBeforeWithdraw = staking.earned(alice);
+        uint256 rewardsBeforeWithdraw = staking.earned(marta);
 
-        // Alice retira 40 tokens.
-        vm.prank(alice);
+        // Marta retira 40 tokens.
+        vm.prank(marta);
         staking.withdraw(withdrawAmount);
 
         // Las recompensas anteriores deben quedar contabilizadas.
-        assertEq(staking.rewards(alice), rewardsBeforeWithdraw);
+        assertEq(staking.rewards(marta), rewardsBeforeWithdraw);
 
         // Su stake pasa a ser de 60 tokens.
-        assertEq(staking.stakedBalance(alice), stakeAmount - withdrawAmount);
+        assertEq(staking.stakedBalance(marta), stakeAmount - withdrawAmount);
 
         // Transcurre otro día con 60 tokens depositados.
         vm.warp(block.timestamp + 1 days);
-        assertGt(staking.earned(alice), rewardsBeforeWithdraw);
+        assertGt(staking.earned(marta), rewardsBeforeWithdraw);
     }
 
     function test_UnusedRewardsReleasedWhenFundingNextPeriod() public {
@@ -833,15 +833,15 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), firstAmount);
         staking.fundRewards(firstAmount);
 
-        // Alice deposita.
-        vm.startPrank(alice);
+        // Marta deposita.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Alice acumula recompensas durante todo el periodo.
+        // Marta acumula recompensas durante todo el periodo.
         vm.warp(staking.periodFinish());
-        uint256 pendingBeforeFunding = staking.earned(alice);
+        uint256 pendingBeforeFunding = staking.earned(marta);
         assertGt(pendingBeforeFunding, 0);
 
         // La reserva debe cubrir las recompensas pendientes.
@@ -851,17 +851,17 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), secondAmount);
         staking.fundRewards(secondAmount);
 
-        // Alice conserva las recompensas del primer periodo.
-        assertApproxEqAbs(staking.earned(alice), pendingBeforeFunding, 10 ** 12);
+        // Marta conserva las recompensas del primer periodo.
+        assertApproxEqAbs(staking.earned(marta), pendingBeforeFunding, 10 ** 12);
         assertGe(rewardToken.balanceOf(address(staking)), staking.reservedRewards());
 
-        // Alice reclama lo pendiente del primer periodo.
-        uint256 balanceBeforeClaim = rewardToken.balanceOf(alice);
-        vm.prank(alice);
+        // Marta reclama lo pendiente del primer periodo.
+        uint256 balanceBeforeClaim = rewardToken.balanceOf(marta);
+        vm.prank(marta);
         staking.getReward();
 
-        assertEq(rewardToken.balanceOf(alice), balanceBeforeClaim + pendingBeforeFunding);
-        assertEq(staking.earned(alice), 0);
+        assertEq(rewardToken.balanceOf(marta), balanceBeforeClaim + pendingBeforeFunding);
+        assertEq(staking.earned(marta), 0);
 
         // Los fondos reservados para el segundo periodo siguen disponibles.
         assertGe(rewardToken.balanceOf(address(staking)), staking.reservedRewards());
@@ -874,42 +874,42 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        // Alice deposita.
-        vm.startPrank(alice);
+        // Marta deposita.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        // Alice acumula recompensas durante un día.
+        // Marta acumula recompensas durante un día.
         vm.warp(block.timestamp + 1 days);
-        uint256 rewardsBeforeWithdraw = staking.earned(alice);
+        uint256 rewardsBeforeWithdraw = staking.earned(marta);
         assertGt(rewardsBeforeWithdraw, 0);
 
-        // Alice retira todos sus tokens.
-        vm.prank(alice);
+        // Marta retira todos sus tokens.
+        vm.prank(marta);
         staking.withdraw(stakeAmount);
 
         // Sus recompensas anteriores deben conservarse.
-        assertEq(staking.earned(alice), rewardsBeforeWithdraw);
-        assertEq(staking.stakedBalance(alice), 0);
+        assertEq(staking.earned(marta), rewardsBeforeWithdraw);
+        assertEq(staking.stakedBalance(marta), 0);
 
-        // Transcurre un día sin que Alice participe.
+        // Transcurre un día sin que Marta participe.
         vm.warp(block.timestamp + 1 days);
 
         // Vuelve a autorizar y depositar los mismos tokens.
-        vm.startPrank(alice);
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // No debe recibir recompensas por el día que estuvo fuera.
-        assertEq(staking.earned(alice), rewardsBeforeWithdraw);
+        assertEq(staking.earned(marta), rewardsBeforeWithdraw);
 
         // Reclama las recompensas que había acumulado antes de salir.
-        vm.prank(alice);
+        vm.prank(marta);
         staking.getReward();
-        assertEq(staking.earned(alice), 0);
-        assertEq(staking.stakedBalance(alice), stakeAmount);
+        assertEq(staking.earned(marta), 0);
+        assertEq(staking.stakedBalance(marta), stakeAmount);
 
         // La reserva debe seguir respaldada.
         assertGe(rewardToken.balanceOf(address(staking)), staking.reservedRewards());
@@ -924,37 +924,37 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), firstAmount);
         staking.fundRewards(firstAmount);
 
-        // Alice y Bob depositan la misma cantidad.
-        vm.startPrank(alice);
+        // Marta y Marcos depositan la misma cantidad.
+        vm.startPrank(marta);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
-        vm.startPrank(bob);
+        vm.startPrank(marcos);
         token.approve(address(staking), stakeAmount);
         staking.stake(stakeAmount);
         vm.stopPrank();
 
         // Transcurre un día.
         vm.warp(block.timestamp + 1 days);
-        uint256 aliceFirstClaim = staking.earned(alice);
-        uint256 bobPendingBeforeWithdraw = staking.earned(bob);
+        uint256 martaFirstClaim = staking.earned(marta);
+        uint256 marcosPendingBeforeWithdraw = staking.earned(marcos);
 
-        assertGt(aliceFirstClaim, 0);
-        assertGt(bobPendingBeforeWithdraw, 0);
+        assertGt(martaFirstClaim, 0);
+        assertGt(marcosPendingBeforeWithdraw, 0);
 
-        // Alice reclama sus recompensas.
-        vm.prank(alice);
+        // Marta reclama sus recompensas.
+        vm.prank(marta);
         staking.getReward();
-        assertEq(staking.earned(alice), 0);
+        assertEq(staking.earned(marta), 0);
 
-        // Bob retira todos sus tokens.
-        vm.prank(bob);
+        // Marcos retira todos sus tokens.
+        vm.prank(marcos);
         staking.withdraw(stakeAmount);
-        assertEq(staking.stakedBalance(bob), 0);
+        assertEq(staking.stakedBalance(marcos), 0);
 
-        // Bob conserva las recompensas ganadas antes de retirar.
-        assertApproxEqAbs(staking.earned(bob), bobPendingBeforeWithdraw, 10 ** 12);
+        // Marcos conserva las recompensas ganadas antes de retirar.
+        assertApproxEqAbs(staking.earned(marcos), marcosPendingBeforeWithdraw, 10 ** 12);
 
         // Termina el primer periodo.
         vm.warp(staking.periodFinish());
@@ -963,27 +963,27 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), secondAmount);
         staking.fundRewards(secondAmount);
 
-        // Bob conserva sus recompensas pendientes.
-        assertApproxEqAbs(staking.earned(bob), bobPendingBeforeWithdraw, 10 ** 12);
+        // Marcos conserva sus recompensas pendientes.
+        assertApproxEqAbs(staking.earned(marcos), marcosPendingBeforeWithdraw, 10 ** 12);
 
-        // Alice conserva las recompensas generadas tras su primera reclamación.
-        uint256 aliceRemainingRewards = staking.earned(alice);
-        assertGt(aliceRemainingRewards, 0);
+        // Marta conserva las recompensas generadas tras su primera reclamación.
+        uint256 martaRemainingRewards = staking.earned(marta);
+        assertGt(martaRemainingRewards, 0);
 
         // La reserva cubre las obligaciones de ambos usuarios.
-        assertGe(staking.reservedRewards(), staking.earned(alice) + staking.earned(bob));
+        assertGe(staking.reservedRewards(), staking.earned(marta) + staking.earned(marcos));
 
-        // Bob reclama sus recompensas pendientes.
-        vm.prank(bob);
+        // Marcos reclama sus recompensas pendientes.
+        vm.prank(marcos);
         staking.getReward();
 
-        assertEq(staking.earned(bob), 0);
+        assertEq(staking.earned(marcos), 0);
 
-        // Alice reclama las recompensas pendientes del primer periodo.
-        vm.prank(alice);
+        // Marta reclama las recompensas pendientes del primer periodo.
+        vm.prank(marta);
 
         staking.getReward();
-        assertEq(staking.earned(alice), 0);
+        assertEq(staking.earned(marta), 0);
 
         // Los fondos del segundo periodo siguen reservados.
         uint256 expectedNewPeriodReserve = staking.rewardRate() * staking.rewardsDuration();
