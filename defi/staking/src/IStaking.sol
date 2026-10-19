@@ -7,25 +7,6 @@ import {IERC20} from "./IERC20.sol";
 /// @notice External API for the staking and reward-distribution contract.
 interface IStaking {
     // =============================================================
-    // CUSTOM ERRORS
-    // =============================================================
-
-    error InvalidStakingTokenAddress();
-    error StakingTokenHasNoCode();
-    error InvalidRewardsTokenAddress();
-    error RewardsTokenHasNoCode();
-    error ReentrantCall();
-    error NotOwner();
-    error AmountMustBeGreaterThanZero();
-    error StakingTokenTransferFailed();
-    error RewardsTokenTransferFailed();
-    error UnexpectedAmountReceived(uint256 expected, uint256 actual);
-    error InsufficientStakedBalance(uint256 available, uint256 requested);
-    error RewardPeriodActive(uint256 periodFinish);
-    error RewardRateIsZero(uint256 amount, uint256 duration);
-    error InsufficientRewardReserve(uint256 actualBalance, uint256 requiredBalance);
-
-    // =============================================================
     // EVENTS
     // =============================================================
 

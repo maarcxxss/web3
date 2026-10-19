@@ -9,6 +9,21 @@ contract Staking is IStaking {
     // CUSTOM ERRORS
     // =============================================================
 
+    error InvalidStakingTokenAddress();
+    error StakingTokenHasNoCode();
+    error InvalidRewardsTokenAddress();
+    error RewardsTokenHasNoCode();
+    error ReentrantCall();
+    error NotOwner();
+    error AmountMustBeGreaterThanZero();
+    error StakingTokenTransferFailed();
+    error RewardsTokenTransferFailed();
+    error UnexpectedAmountReceived(uint256 expected, uint256 actual);
+    error InsufficientStakedBalance(uint256 available, uint256 requested);
+    error RewardPeriodActive(uint256 periodFinish);
+    error RewardRateIsZero(uint256 amount, uint256 duration);
+    error InsufficientRewardReserve(uint256 actualBalance, uint256 requiredBalance);
+
     // =============================================================
     // CONSTANTES
     // =============================================================
@@ -21,12 +36,7 @@ contract Staking is IStaking {
     // EVENTOS
     // =============================================================
 
-    // Se emite cuando un usuario deposita tokens para hacer staking.
-    // Events are declared by IStaking.
-
-    // Se emite cuando un usuario retira tokens depositados.
-
-    // Se emite cuando un usuario cobra sus recompensas.
+    // Los eventos de staking están declarados en IStaking.
 
     // =============================================================
     // VARIABLES DE ESTADO
