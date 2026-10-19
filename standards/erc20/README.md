@@ -1,34 +1,43 @@
 # ERC-20 Token — Solidity & Foundry
 
-A custom implementation of a fungible token compatible with the **ERC-20 Ethereum standard**, developed in Solidity as part of a personal Blockchain and Web3 learning project.
+A custom ERC-20 token implementation with capped supply, access control, pausing, minting, burning, and signature-based approvals. This project is part of a personal Blockchain and Web3 learning portfolio.
 
-This project explores smart contract fundamentals, the implementation of the main mechanisms of a token, and the verification of its behavior through automated testing with Foundry.
+> **Quick to try:** clone the repository, install Foundry, and run the tests with the commands below.
 
-**Status:** Implementation and testing completed for the current version. Security review and technical documentation are still in progress.
+## Quick start
+
+Prerequisites: [Git](https://git-scm.com/) and [Foundry](https://book.getfoundry.sh/getting-started/installation).
+
+Run from a terminal in a fresh clone:
+
+```bash
+git clone https://github.com/maarcxxss/web3.git
+cd web3/standards/erc20
+forge install foundry-rs/forge-std --no-commit
+forge build
+forge test
+```
+
+Foundry installs `forge-std` locally under `lib/`; the dependency is ignored by Git. The commands above compile the project and run its unit, fuzz, and invariant tests.
+
+To deploy and interact with the token on a local chain, continue to [Local deployment](#local-deployment).
+
+## Overview
+
+`MyToken.sol` is a custom implementation of the core ERC-20 interface in `IERC20.sol`. The token uses 18 decimals and has a maximum supply of 2,000 tokens. The deployer starts as owner and minter.
+
+The implementation also includes a custom `permit` function based on EIP-2612 and EIP-712. It allows an account to set an ERC-20 allowance with a signature instead of an on-chain `approve` transaction.
 
 ## Features
 
-- **ERC-20:** Custom implementation of the standard's core functions.
-- **Balances and supply:** Balance and total supply queries.
-- **Transfers:** `transfer`, `approve`, and `transferFrom`.
-- **Events:** `Transfer`, `Approval`, and events related to contract management.
-- **Access control:** Contract ownership and minter permissions.
-- **Mint and burn:** Token creation and destruction.
-- **Supply cap:** Maximum issuance limit enforced through `CAP`.
-- **Pausability:** `pause` and `unpause` functions.
-- **Permit:** Custom implementation based on EIP-2612 and EIP-712 for setting allowances through signatures.
-- **Custom errors:** Specific errors representing failure conditions.
-- **Testing:** Unit tests, fuzz testing, and invariant testing.
-- **Code coverage:** Coverage analysis using Foundry.
+- **ERC-20 transfers:** `transfer`, `approve`, `transferFrom`, `balanceOf`, `allowance`, and `totalSupply`.
+- **Supply management:** owner-authorized minting, token burning, and a fixed supply cap.
+- **Access control:** ownership and minter permissions.
+- **Pausing:** the owner can pause and resume token transfers and supply changes.
+- **Permit:** signature-based approvals with EIP-712 domain separation and nonce protection.
+- **Custom errors and events:** explicit failure conditions and observable contract updates.
 
-## Technologies
-
-- Solidity
-- Foundry: Forge, Anvil, and Cast
-- Git and GitHub
-- Visual Studio Code
-
-## Project Structure
+## Project structure
 
 ```text
 erc20/
@@ -42,227 +51,74 @@ erc20/
 ├── script/
 │   └── DeployMyToken.s.sol
 ├── foundry.toml
-├── .gitignore
 └── README.md
 ```
 
-### Contracts
+## Tests and coverage
 
-- `IERC20.sol`: Defines the ERC-20 interface used by the project.
-- `MyToken.sol`: Contains the custom token implementation.
+The test files are organized by testing approach:
 
-### Tests
+| Suite | Scope |
+|---|---|
+| `MyToken.t.sol` | Unit tests for ERC-20 behavior, access control, minting, burning, pausing, events, custom errors, and `permit`. |
+| `MyToken_fuzz.t.sol` | Fuzz tests for generated transfer, allowance, mint, and burn amounts. |
+| `MyToken_invariant.t.sol` | Invariants for total supply and the sum of balances across the test accounts. |
 
-- `MyToken.t.sol`: Unit tests covering functions, permissions, events, errors, and contract mechanisms.
-- `MyToken_fuzz.t.sol`: Tests using automatically generated inputs.
-- `MyToken_invariant.t.sol`: Invariant tests that verify properties across sequences of token transfers.
-
-### Scripts
-
-- `DeployMyToken.s.sol`: Deploys the token using Foundry.
-
-## Installation and Execution
-
-**Prerequisites:** Git and Foundry installed.
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/maarcxxss/web3.git
-cd web3/standards/erc20
-```
-
-### 2. Install the testing dependency
-
-The project uses `forge-std` for Foundry tests and deployment scripts.
-
-```bash
-forge install foundry-rs/forge-std --no-commit
-```
-
-### 3. Compile the contracts
-
-```bash
-forge build
-```
-
-### 4. Run all tests
-
-```bash
-forge test
-```
-
-### 5. Run unit tests
+Run an individual suite from `standards/erc20/`:
 
 ```bash
 forge test --match-path test/MyToken.t.sol
-```
-
-### 6. Run fuzz tests
-
-```bash
 forge test --match-path test/MyToken_fuzz.t.sol
-```
-
-### 7. Run invariant tests
-
-```bash
 forge test --match-path test/MyToken_invariant.t.sol
 ```
 
-### 8. Generate a coverage report
+Generate a coverage report:
 
 ```bash
 forge coverage --report summary
 ```
 
-## Local Deployment with Anvil
+The latest results recorded for this project are **81 tests passed**, with **100%** line, instruction, branch, and function coverage. Invariant checks cover the actions and accounts configured in their handler; these results are not a formal proof or a security audit.
 
-Anvil runs a local Ethereum blockchain that allows contracts to be deployed and transactions to be tested without using real funds.
+## Local deployment
 
-### 1. Start Anvil
+The deployment script is intended for a local Anvil node. It uses the default Anvil account, which is for local development only.
 
-In a separate terminal, run:
+1. Start Anvil in a separate terminal:
 
-```bash
-anvil
-```
+   ```bash
+   anvil
+   ```
 
-Keep this terminal open while interacting with the local blockchain.
+2. From `standards/erc20/`, deploy the token to the local chain:
 
-### 2. Deploy the token
+   ```bash
+   forge script script/DeployMyToken.s.sol:DeployMyToken --rpc-url http://127.0.0.1:8545 --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --unlocked --broadcast
+   ```
 
-From the `standards/erc20` directory, run:
+3. Copy the deployed address from the output and query the token:
 
-```bash
-forge script script/DeployMyToken.s.sol:DeployMyToken --rpc-url http://127.0.0.1:8545 --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --unlocked --broadcast
-```
+   ```bash
+   cast call <TOKEN_ADDRESS> "name()(string)" --rpc-url http://127.0.0.1:8545
+   cast call <TOKEN_ADDRESS> "totalSupply()(uint256)" --rpc-url http://127.0.0.1:8545
+   ```
 
-This command uses a default Anvil account. Verify that the specified address appears among the accounts provided by your local Anvil instance.
+Restarting Anvil resets its local chain, so the token must be redeployed. No real funds or external network are needed for this walkthrough.
 
-Once deployment completes, Foundry will display the deployed contract address. Use that address in the following queries.
+## Security and scope
 
-### 3. Query the token
+This is an educational implementation, not an audited or production-ready token. The tests exercise the documented behaviors, but passing tests and coverage figures do not establish the absence of vulnerabilities. Do not use it to manage real funds.
 
-Replace `CONTRACT_ADDRESS` with the address returned by the deployment command.
+## Project status
 
-Query the token name:
-
-```bash
-cast call CONTRACT_ADDRESS "name()(string)" --rpc-url http://127.0.0.1:8545
-```
-
-Query the total supply:
-
-```bash
-cast call CONTRACT_ADDRESS "totalSupply()(uint256)" --rpc-url http://127.0.0.1:8545
-```
-
-Query the number of decimals:
-
-```bash
-cast call CONTRACT_ADDRESS "decimals()(uint8)" --rpc-url http://127.0.0.1:8545
-```
-
-Query an account's balance:
-
-```bash
-cast call CONTRACT_ADDRESS "balanceOf(address)(uint256)" ACCOUNT_ADDRESS --rpc-url http://127.0.0.1:8545
-```
-
-### 4. Send a token transfer
-
-Example: transfer 10 tokens between two Anvil accounts.
-
-```bash
-cast send CONTRACT_ADDRESS "transfer(address,uint256)" RECIPIENT_ADDRESS 10000000000000000000 --rpc-url http://127.0.0.1:8545 --unlocked --from SENDER_ADDRESS
-```
-
-With 18 decimals, `10000000000000000000` represents 10 tokens.
-
-The command returns transaction information, including its hash, block, gas usage, and generated logs.
-
-**Note:** Contract addresses and balances belong to the local Anvil instance. Restarting Anvil may erase the local blockchain state, requiring the contract to be deployed again.
-
-## Testing and Coverage
-
-The project uses three complementary approaches to verify the contract's behavior.
-
-### Unit Tests
-
-These tests check individual operations, including transfers, allowances, access control, token minting and burning, pausing, events, custom errors, and `permit` signatures.
-
-**Result:** 72 unit tests passed.
-
-### Fuzz Testing
-
-Fuzz testing uses automatically generated inputs to explore different values and verify expected properties.
-
-Eight fuzz tests have been implemented, with 256 cases per test in the current configuration.
-
-**Result:** 8 fuzz tests passed.
-
-### Invariant Testing
-
-Invariant testing verifies properties that must remain true across sequences of operations generated by Foundry.
-
-Two invariants are checked:
-
-- `invariant_TotalSupplyEqualsBalances`: the total supply equals the sum of the balances of the accounts included in the test environment.
-- `invariant_TotalSupplyRemainsConstant`: the total supply remains constant during token transfers.
-
-The current configuration executes 256 sequences (*runs*) with 128,000 handler calls, with no reverts or discarded cases.
-
-These invariants apply to the operations and accounts defined in the current test setup. They do not constitute an exhaustive verification of every contract feature.
-
-### Coverage Results
-
-Results obtained using `forge coverage --report summary`:
-
-| Metric | Coverage |
-|---|---:|
-| Lines | 100% |
-| Instructions | 100% |
-| Branches | 100% |
-| Functions | 100% |
-
-The recorded summary from the full `forge test` execution reports **81 tests passed, 0 failed, and 0 skipped**.
-
-Coverage measures which parts of the code are exercised by tests. It does not, by itself, guarantee the absence of bugs or vulnerabilities. Security analysis remains an important part of the development process.
-
-## Roadmap
-
-- [x] Custom ERC-20 contract implementation.
-- [x] Balance, allowance, and transfer management.
-- [x] Access control and minter permissions.
-- [x] Mint and burn functions.
-- [x] Maximum supply limit.
-- [x] Pausing mechanism.
-- [x] `permit` implementation.
-- [x] Unit tests.
-- [x] Fuzz testing.
-- [x] Invariant testing.
-- [x] 100% coverage across the measured metrics.
-- [x] Foundry deployment script.
-- [x] Local deployment and manual checks using Anvil.
-
-## Future Improvements
-
-- [ ] Review edge cases and potential vulnerabilities.
-- [ ] Conduct a more comprehensive security review.
-- [ ] Expand the technical documentation and interaction examples.
+- [x] ERC-20 implementation, custom errors, and events.
+- [x] Unit, fuzz, and invariant test suites.
+- [x] Foundry deployment script and local Anvil walkthrough.
+- [ ] Independent security review.
 - [ ] Evaluate deployment to a testnet.
-
-## Project Goal
-
-This project aims to understand Ethereum standards and apply good practices in smart contract development, testing, and security.
-
-It has been developed incrementally, prioritizing an understanding of the contract's logic, behavioral verification, and reproducibility of experiments.
-
-This is an educational project and **is not currently intended to manage real funds**.
 
 ## Author
 
-Personal Computer Science and Engineering project focused on Blockchain, Solidity, Smart Contracts, and Web3 development.
+Personal learning project focused on Blockchain, Solidity, Smart Contracts, and Web3.
 
 GitHub: [@maarcxxss](https://github.com/maarcxxss)
