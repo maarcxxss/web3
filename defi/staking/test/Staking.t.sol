@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {MyToken} from "../src/MyToken.sol";
 import {FeeToken} from "./mocks/FeeToken.sol";
 import {Staking} from "../src/Staking.sol";
+import {IStaking} from "../src/IStaking.sol";
 import {CoverageERC20} from "./mocks/CoverageERC20.sol";
 
 contract StakingTest is Test {
@@ -64,22 +65,22 @@ contract StakingTest is Test {
     // =============================================================
 
     function test_RevertDeployWithZeroTokenAddress() public {
-        vm.expectRevert(Staking.InvalidStakingTokenAddress.selector);
+        vm.expectRevert(IStaking.InvalidStakingTokenAddress.selector);
         new Staking(address(0), address(rewardToken));
     }
 
     function test_RevertDeployWithNonContractStakingToken() public {
-        vm.expectRevert(Staking.StakingTokenHasNoCode.selector);
+        vm.expectRevert(IStaking.StakingTokenHasNoCode.selector);
         new Staking(address(1), address(rewardToken));
     }
 
     function test_RevertDeployWithZeroRewardsTokenAddress() public {
-        vm.expectRevert(Staking.InvalidRewardsTokenAddress.selector);
+        vm.expectRevert(IStaking.InvalidRewardsTokenAddress.selector);
         new Staking(address(token), address(0));
     }
 
     function test_RevertDeployWithNonContractRewardsToken() public {
-        vm.expectRevert(Staking.RewardsTokenHasNoCode.selector);
+        vm.expectRevert(IStaking.RewardsTokenHasNoCode.selector);
         new Staking(address(token), address(1));
     }
 
@@ -124,7 +125,7 @@ contract StakingTest is Test {
     /* --- Reverts --- */
 
     function test_RevertStakeZero() public {
-        vm.expectRevert(Staking.AmountMustBeGreaterThanZero.selector);
+        vm.expectRevert(IStaking.AmountMustBeGreaterThanZero.selector);
 
         vm.prank(alice);
         staking.stake(0);
@@ -152,7 +153,7 @@ contract StakingTest is Test {
         feeToken.transfer(aliceFee, 200 * UNIT);
         vm.startPrank(aliceFee);
         feeToken.approve(address(feeStaking), 100 * UNIT);
-        vm.expectRevert(abi.encodeWithSelector(Staking.UnexpectedAmountReceived.selector, 100 * UNIT, 98 * UNIT));
+        vm.expectRevert(abi.encodeWithSelector(IStaking.UnexpectedAmountReceived.selector, 100 * UNIT, 98 * UNIT));
         feeStaking.stake(100 * UNIT);
         vm.stopPrank();
 
@@ -169,7 +170,7 @@ contract StakingTest is Test {
 
         vm.startPrank(alice);
         coverageToken.approve(address(coverageStaking), UNIT);
-        vm.expectRevert(Staking.StakingTokenTransferFailed.selector);
+        vm.expectRevert(IStaking.StakingTokenTransferFailed.selector);
         coverageStaking.stake(UNIT);
         vm.stopPrank();
 
@@ -194,7 +195,7 @@ contract StakingTest is Test {
             callbackError := mload(add(callbackRevert, 32))
         }
         assertFalse(coverageToken.callbackSucceeded());
-        assertEq(callbackError, Staking.ReentrantCall.selector);
+        assertEq(callbackError, IStaking.ReentrantCall.selector);
         assertEq(coverageStaking.stakedBalance(alice), UNIT);
         assertEq(coverageStaking.totalStaked(), UNIT);
     }
@@ -267,7 +268,7 @@ contract StakingTest is Test {
     /* --- Reverts --- */
 
     function test_RevertWithdrawZero() public {
-        vm.expectRevert(Staking.AmountMustBeGreaterThanZero.selector);
+        vm.expectRevert(IStaking.AmountMustBeGreaterThanZero.selector);
 
         vm.prank(alice);
         staking.withdraw(0);
@@ -277,13 +278,13 @@ contract StakingTest is Test {
         vm.startPrank(alice);
         token.approve(address(staking), 50 * UNIT);
         staking.stake(50 * UNIT);
-        vm.expectRevert(abi.encodeWithSelector(Staking.InsufficientStakedBalance.selector, 50 * UNIT, 60 * UNIT));
+        vm.expectRevert(abi.encodeWithSelector(IStaking.InsufficientStakedBalance.selector, 50 * UNIT, 60 * UNIT));
         staking.withdraw(60 * UNIT);
         vm.stopPrank();
     }
 
     function test_RevertWithdrawWithoutStake() public {
-        vm.expectRevert(abi.encodeWithSelector(Staking.InsufficientStakedBalance.selector, 0, 1));
+        vm.expectRevert(abi.encodeWithSelector(IStaking.InsufficientStakedBalance.selector, 0, 1));
 
         vm.prank(alice);
         staking.withdraw(1);
@@ -300,7 +301,7 @@ contract StakingTest is Test {
         vm.stopPrank();
 
         coverageToken.setTransferReturns(false);
-        vm.expectRevert(Staking.StakingTokenTransferFailed.selector);
+        vm.expectRevert(IStaking.StakingTokenTransferFailed.selector);
         vm.prank(alice);
         coverageStaking.withdraw(2 * UNIT);
 
@@ -320,7 +321,7 @@ contract StakingTest is Test {
         token.approve(address(staking), 50 * UNIT);
 
         vm.expectEmit(true, false, false, true);
-        emit Staking.Staked(alice, 50 * UNIT);
+        emit IStaking.Staked(alice, 50 * UNIT);
 
         staking.stake(50 * UNIT);
         vm.stopPrank();
@@ -332,7 +333,7 @@ contract StakingTest is Test {
         staking.stake(50 * UNIT);
 
         vm.expectEmit(true, false, false, true);
-        emit Staking.Withdrawn(alice, 20 * UNIT);
+        emit IStaking.Withdrawn(alice, 20 * UNIT);
 
         staking.withdraw(20 * UNIT);
         vm.stopPrank();
@@ -364,14 +365,14 @@ contract StakingTest is Test {
         coverageRewardToken.setTransferFromReturns(false);
         coverageRewardToken.approve(address(coverageStaking), 700 * UNIT);
 
-        vm.expectRevert(Staking.RewardsTokenTransferFailed.selector);
+        vm.expectRevert(IStaking.RewardsTokenTransferFailed.selector);
         coverageStaking.fundRewards(700 * UNIT);
     }
 
     function test_RevertFundRewardsWhenRewardRateIsZero() public {
         rewardToken.approve(address(staking), 1);
 
-        vm.expectRevert(abi.encodeWithSelector(Staking.RewardRateIsZero.selector, 1, staking.rewardsDuration()));
+        vm.expectRevert(abi.encodeWithSelector(IStaking.RewardRateIsZero.selector, 1, staking.rewardsDuration()));
         staking.fundRewards(1);
     }
 
@@ -407,7 +408,7 @@ contract StakingTest is Test {
         uint256 requiredBalance = previousReserve + nextScheduled;
 
         vm.expectRevert(
-            abi.encodeWithSelector(Staking.InsufficientRewardReserve.selector, nextFunding, requiredBalance)
+            abi.encodeWithSelector(IStaking.InsufficientRewardReserve.selector, nextFunding, requiredBalance)
         );
         staking.fundRewards(nextFunding);
     }
@@ -419,17 +420,17 @@ contract StakingTest is Test {
         rewardToken.approve(address(staking), rewardAmount);
         staking.fundRewards(rewardAmount);
 
-        vm.expectRevert(abi.encodeWithSelector(Staking.RewardPeriodActive.selector, staking.periodFinish()));
+        vm.expectRevert(abi.encodeWithSelector(IStaking.RewardPeriodActive.selector, staking.periodFinish()));
         staking.fundRewards(1 * UNIT);
     }
 
     function test_RevertFundRewardsZero() public {
-        vm.expectRevert(Staking.AmountMustBeGreaterThanZero.selector);
+        vm.expectRevert(IStaking.AmountMustBeGreaterThanZero.selector);
         staking.fundRewards(0);
     }
 
     function test_RevertFundRewardsUnauthorized() public {
-        vm.expectRevert(Staking.NotOwner.selector);
+        vm.expectRevert(IStaking.NotOwner.selector);
 
         vm.prank(alice);
         staking.fundRewards(UNIT);
@@ -442,7 +443,7 @@ contract StakingTest is Test {
         feeRewardToken.approve(address(feeRewardStaking), amount);
 
         vm.expectRevert(
-            abi.encodeWithSelector(Staking.UnexpectedAmountReceived.selector, amount, amount - (amount * 2 / 100))
+            abi.encodeWithSelector(IStaking.UnexpectedAmountReceived.selector, amount, amount - (amount * 2 / 100))
         );
         feeRewardStaking.fundRewards(amount);
 
@@ -586,7 +587,7 @@ contract StakingTest is Test {
         uint256 reserveBefore = staking.reservedRewards();
 
         vm.expectEmit(true, false, false, true);
-        emit Staking.RewardPaid(alice, expectedReward);
+        emit IStaking.RewardPaid(alice, expectedReward);
 
         vm.prank(alice);
         staking.getReward();
@@ -618,7 +619,7 @@ contract StakingTest is Test {
         assertGt(coverageStaking.earned(alice), 0);
 
         coverageRewardToken.setTransferReturns(false);
-        vm.expectRevert(Staking.RewardsTokenTransferFailed.selector);
+        vm.expectRevert(IStaking.RewardsTokenTransferFailed.selector);
         vm.prank(alice);
         coverageStaking.getReward();
 

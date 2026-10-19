@@ -2,26 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {IERC20} from "./IERC20.sol";
+import {IStaking} from "./IStaking.sol";
 
-contract Staking {
+contract Staking is IStaking {
     // =============================================================
     // CUSTOM ERRORS
     // =============================================================
-
-    error InvalidStakingTokenAddress();
-    error StakingTokenHasNoCode();
-    error InvalidRewardsTokenAddress();
-    error RewardsTokenHasNoCode();
-    error ReentrantCall();
-    error NotOwner();
-    error AmountMustBeGreaterThanZero();
-    error StakingTokenTransferFailed();
-    error RewardsTokenTransferFailed();
-    error UnexpectedAmountReceived(uint256 expected, uint256 actual);
-    error InsufficientStakedBalance(uint256 available, uint256 requested);
-    error RewardPeriodActive(uint256 periodFinish);
-    error RewardRateIsZero(uint256 amount, uint256 duration);
-    error InsufficientRewardReserve(uint256 actualBalance, uint256 requiredBalance);
 
     // =============================================================
     // CONSTANTES
@@ -36,13 +22,11 @@ contract Staking {
     // =============================================================
 
     // Se emite cuando un usuario deposita tokens para hacer staking.
-    event Staked(address indexed user, uint256 amount);
+    // Events are declared by IStaking.
 
     // Se emite cuando un usuario retira tokens depositados.
-    event Withdrawn(address indexed user, uint256 amount);
 
     // Se emite cuando un usuario cobra sus recompensas.
-    event RewardPaid(address indexed user, uint256 reward);
 
     // =============================================================
     // VARIABLES DE ESTADO
@@ -53,20 +37,20 @@ contract Staking {
     // -------------------------------------------------------------
 
     // Dirección que puede administrar la financiación de recompensas.
-    address public owner;
+    address public override owner;
 
     // -------------------------------------------------------------
     // Gestión del staking
     // -------------------------------------------------------------
 
     // Token que los usuarios deben depositar para participar.
-    IERC20 public token;
+    IERC20 public override token;
 
     // Cantidad de tokens depositados por cada usuario.
     mapping(address => uint256) private _stakedBalance;
 
     // Cantidad total de tokens depositados en el contrato.
-    uint256 public totalStaked;
+    uint256 public override totalStaked;
 
     // -------------------------------------------------------------
     // Gestión de recompensas
@@ -74,41 +58,41 @@ contract Staking {
 
     // Token utilizado para pagar las recompensas.
     // Puede ser diferente del token utilizado para hacer staking.
-    IERC20 public rewardsToken;
+    IERC20 public override rewardsToken;
 
     // Cantidad de recompensas distribuidas por segundo.
-    uint256 public rewardRate;
+    uint256 public override rewardRate;
 
     // Último instante hasta el que se ha actualizado la contabilidad.
-    uint256 public lastUpdateTime;
+    uint256 public override lastUpdateTime;
 
     // Acumulador de recompensas por cada unidad de staking,
     // expresado con la precisión definida en PRECISION.
-    uint256 public rewardPerTokenStored;
+    uint256 public override rewardPerTokenStored;
 
     // Valor del acumulador que ya se ha contabilizado para cada usuario.
-    mapping(address => uint256) public userRewardPerTokenPaid;
+    mapping(address => uint256) public override userRewardPerTokenPaid;
 
     // Recompensas acumuladas pendientes de cobrar por cada usuario.
-    mapping(address => uint256) public rewards;
+    mapping(address => uint256) public override rewards;
 
     // Reserva contable para cubrir recompensas pendientes y
     // recompensas presupuestadas para el periodo activo.
-    uint256 public reservedRewards;
+    uint256 public override reservedRewards;
 
     // Recompensas generadas durante el periodo actual o el último.
     // Se utiliza para calcular el presupuesto que no llegó a generarse.
-    uint256 public periodRewardsGenerated;
+    uint256 public override periodRewardsGenerated;
 
     // -------------------------------------------------------------
     // Duración y finalización de los periodos de recompensas
     // -------------------------------------------------------------
 
     // Instante en el que termina el periodo de recompensas.
-    uint256 public periodFinish;
+    uint256 public override periodFinish;
 
     // Duración de cada periodo de distribución: siete días.
-    uint256 public rewardsDuration = 7 days;
+    uint256 public override rewardsDuration = 7 days;
 
     // -------------------------------------------------------------
     // Protección frente a reentrancy
@@ -186,7 +170,7 @@ contract Staking {
      * @param user Dirección del usuario consultado.
      * @return Cantidad de tokens que mantiene depositados.
      */
-    function stakedBalance(address user) external view returns (uint256) {
+    function stakedBalance(address user) external view override returns (uint256) {
         return _stakedBalance[user];
     }
 
@@ -202,7 +186,7 @@ contract Staking {
      *      solicitada.
      * @param amount Cantidad de tokens que se desea depositar.
      */
-    function stake(uint256 amount) external nonReentrant {
+    function stake(uint256 amount) external override nonReentrant {
         if (amount == 0) revert AmountMustBeGreaterThanZero();
 
         // Actualizamos las recompensas del usuario antes de modificar
@@ -237,7 +221,7 @@ contract Staking {
      *      balance contabilizado antes de realizar la transferencia.
      * @param amount Cantidad de tokens que se desea retirar.
      */
-    function withdraw(uint256 amount) external nonReentrant {
+    function withdraw(uint256 amount) external override nonReentrant {
         if (amount == 0) revert AmountMustBeGreaterThanZero();
 
         if (_stakedBalance[msg.sender] < amount) {
@@ -269,7 +253,7 @@ contract Staking {
      * @notice Devuelve el último instante al que se aplican recompensas.
      * @dev El tiempo actual nunca puede superar el final del periodo.
      */
-    function lastTimeRewardApplicable() public view returns (uint256) {
+    function lastTimeRewardApplicable() public view override returns (uint256) {
         return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
@@ -278,7 +262,7 @@ contract Staking {
      * @dev Utiliza PRECISION para reducir la pérdida de precisión
      *      causada por la aritmética entera de Solidity.
      */
-    function rewardPerToken() public view returns (uint256) {
+    function rewardPerToken() public view override returns (uint256) {
         // Si no hay tokens depositados, no se incrementa el acumulador.
         if (totalStaked == 0) {
             return rewardPerTokenStored;
@@ -297,7 +281,7 @@ contract Staking {
      * @param user Dirección del usuario consultado.
      * @return Recompensas generadas y todavía no cobradas.
      */
-    function earned(address user) public view returns (uint256) {
+    function earned(address user) public view override returns (uint256) {
         // Se calcula la participación del usuario en el incremento
         // del acumulador desde su última actualización.
         return (_stakedBalance[user] * (rewardPerToken() - userRewardPerTokenPaid[user])) / PRECISION + rewards[user];
@@ -345,7 +329,7 @@ contract Staking {
      *      un periodo mientras el anterior siga activo.
      * @param amount Cantidad de tokens de recompensa que se aportan.
      */
-    function fundRewards(uint256 amount) external onlyOwner nonReentrant {
+    function fundRewards(uint256 amount) external override onlyOwner nonReentrant {
         if (amount == 0) revert AmountMustBeGreaterThanZero();
 
         if (block.timestamp < periodFinish) revert RewardPeriodActive(periodFinish);
@@ -413,7 +397,7 @@ contract Staking {
      * @dev Actualiza las recompensas antes de consultar el importe.
      *      Reduce la deuda contable antes de transferir los tokens.
      */
-    function getReward() external nonReentrant {
+    function getReward() external override nonReentrant {
         // Consolidamos las recompensas del usuario hasta este instante.
         _updateReward(msg.sender);
 

@@ -44,6 +44,7 @@ The local deployment script deploys two instances of the verified `MyToken` cont
 staking/
 ├── src/
 │   ├── IERC20.sol
+│   ├── IStaking.sol
 │   ├── MyToken.sol
 │   └── Staking.sol
 ├── test/
@@ -59,7 +60,7 @@ staking/
 └── README.md
 ```
 
-The `MyToken.sol` and `IERC20.sol` files in `src/` are copied from `standards/erc20/src/` so this example deploys the same ERC-20 implementation. `CoverageERC20.sol` and `FeeToken.sol` remain under `test/mocks/` because they model special token behavior used only by tests.
+`IStaking.sol` defines the public contract API for integrations such as a web application. `Staking.sol` implements that interface. The `MyToken.sol` and `IERC20.sol` files in `src/` are copied from `standards/erc20/src/` so this example deploys the same ERC-20 implementation. `CoverageERC20.sol` and `FeeToken.sol` remain under `test/mocks/` because they model special token behavior used only by tests.
 
 ## Tests and coverage
 
